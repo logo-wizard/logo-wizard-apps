@@ -57,7 +57,7 @@ jobs:
         run: |
           BASE_IMG_VERSION=`cat ./backend/base_img_version`
           IMG_TAG=${{ secrets.YC_CI_REGISTRY }}/${{ secrets.YC_CI_REGISTRY_ID }}/logo-base-image:${BASE_IMG_VERSION}
-          echo "::set-output name=base-tag::${IMG_TAG}"
+          echo "::set-output name=img-tag::${IMG_TAG}"
 
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
@@ -67,7 +67,7 @@ jobs:
         with:
           context: ./backend
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.set-img-tag.outputs.matrix }}
+          tags: ${{ steps.set-img-tag.outputs.img-tag }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
