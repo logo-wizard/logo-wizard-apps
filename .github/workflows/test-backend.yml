@@ -31,8 +31,9 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          docker ps
+          docker ps -a
           cd ./backend/app/logo_api
+          docker-compose -f docker-compose.tests.yaml logs redis
           pip install --upgrade pip
           pip install -Ue ".[develop]"
 
