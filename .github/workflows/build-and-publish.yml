@@ -75,7 +75,7 @@ jobs:
       - name: Extract Image Tag
         id: set-img-tag
         run: |
-          IMG_TAG=${YC_CI_REGISTRY}/${YC_CI_REGISTRY_ID}/logo-base-base-image:latest
+          IMG_TAG=${{ secrets.YC_CI_REGISTRY }}/${{ secrets.YC_CI_REGISTRY_ID }}/logo-base-base-image:latest
           echo "::set-output name=img-tag::${IMG_TAG}"
 
       - name: Build and push Docker image
@@ -92,7 +92,7 @@ jobs:
 
   build-base:
     runs-on: ubuntu-latest
-    if: ${{ always() }}  # allow skipping base-base image build
+    if: ${{ success() || cancelled() }}  # allow skipping base-base image build
     needs: build-base-base
     permissions:
       contents: read
@@ -133,7 +133,7 @@ jobs:
   
   build-worker:
     runs-on: ubuntu-latest
-    if: ${{ always() }}  # allow skipping base image build
+    if: ${{ success() || cancelled() }}  # allow skipping base image build
     needs: [build-base-base, build-base]
     permissions:
       contents: read
@@ -179,7 +179,7 @@ jobs:
           
   build-api:
     runs-on: ubuntu-latest
-    if: ${{ always() }}  # allow skipping base image build
+    if: ${{ success() || cancelled() }}  # allow skipping base image build
     needs: [build-base-base, build-base]
     permissions:
       contents: read
