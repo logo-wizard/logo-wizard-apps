@@ -40,7 +40,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
         with:
-          registry: ${{ secrets.YC_CI_REGISTRY }}/${{ YC_CI_REGISTRY_ID }}
+          registry: ${{ secrets.YC_CI_REGISTRY }}/${{ secrets.YC_CI_REGISTRY_ID }}
           username: ${{ secrets.YC_CI_REGISTRY_USER }}
           password: ${{ secrets.YC_CI_REGISTRY_PASSWORD }}
 
@@ -50,7 +50,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
         with:
-          images: ${{ secrets.YC_CI_REGISTRY }}/${{ YC_CI_REGISTRY_ID }}
+          images: ${{ secrets.YC_CI_REGISTRY }}/${{ secrets.YC_CI_REGISTRY_ID }}
       
       - name: Extract Image Tag
         id: set-img-tag
