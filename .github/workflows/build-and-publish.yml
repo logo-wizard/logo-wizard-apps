@@ -33,6 +33,8 @@ jobs:
       # Workaround: https://github.com/docker/build-push-action/issues/461
       - name: Setup Docker buildx
         uses: docker/setup-buildx-action@79abd3f86f79a9d68a23c75a09a9a85889262adf
+        with:
+          buildkitd-flags: --debug
 
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
@@ -46,11 +48,11 @@ jobs:
 
       # Extract metadata (tags, labels) for Docker
       # https://github.com/docker/metadata-action
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
-        with:
-          images: ${{ secrets.YC_CI_REGISTRY }}/${{ secrets.YC_CI_REGISTRY_ID }}
+#       - name: Extract Docker metadata
+#         id: meta
+#         uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+#         with:
+#           images: ${{ secrets.YC_CI_REGISTRY }}/${{ secrets.YC_CI_REGISTRY_ID }}
       
       - name: Extract Image Tag
         id: set-img-tag
@@ -69,7 +71,7 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           # tags: ${{ steps.set-img-tag.outputs.img-tag }}
           tags: ${{ secrets.YC_CI_REGISTRY }}/${{ secrets.YC_CI_REGISTRY_ID }}/logo-base-image:test-gh
-          labels: ${{ steps.meta.outputs.labels }}
+#           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -79,10 +81,10 @@ jobs:
       # repository is public to avoid leaking data.  If you would like to publish
       # transparency data even for private images, pass --force to cosign below.
       # https://github.com/sigstore/cosign
-      - name: Sign the published Docker image
-        if: ${{ github.event_name != 'pull_request' }}
-        env:
-          COSIGN_EXPERIMENTAL: "true"
-        # This step uses the identity token to provision an ephemeral certificate
-        # against the sigstore community Fulcio instance.
-        run: echo "${{ steps.meta.outputs.tags }}" | xargs -I {} cosign sign {}@${{ steps.build-and-push.outputs.digest }}
+#       - name: Sign the published Docker image
+#         if: ${{ github.event_name != 'pull_request' }}
+#         env:
+#           COSIGN_EXPERIMENTAL: "true"
+#         # This step uses the identity token to provision an ephemeral certificate
+#         # against the sigstore community Fulcio instance.
+#         run: echo "${{ steps.meta.outputs.tags }}" | xargs -I {} cosign sign {}@${{ steps.build-and-push.outputs.digest }}
