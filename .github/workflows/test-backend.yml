@@ -37,4 +37,5 @@ jobs:
 
       - name: Run Tests
         run: |
+          cd ./backend/app/logo_api
           pytest --log-cli-level=INFO tests
