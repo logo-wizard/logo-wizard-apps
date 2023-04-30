@@ -55,7 +55,7 @@ jobs:
       - name: Extract Image Tag
         id: set-img-tag
         run: |
-          BASE_IMG_VERSION=`cat base_img_version`
+          BASE_IMG_VERSION=`cat ./backend/base_img_version`
           IMG_TAG=${{ secrets.YC_CI_REGISTRY }}/${{ secrets.YC_CI_REGISTRY_ID }}/logo-base-image:${BASE_IMG_VERSION}
           echo "::set-output name=base-tag::${IMG_TAG}"
 
