@@ -7,37 +7,19 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-base:
-
+  build-ui:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-      # This is used to complete the identity challenge
-      # with sigstore/fulcio when running outside of PRs.
       id-token: write
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Install the cosign tool except on PR
-      # https://github.com/sigstore/cosign-installer
-#       - name: Install cosign
-#         if: github.event_name != 'pull_request'
-#         uses: sigstore/cosign-installer@f3c664df7af409cb4873aa5068053ba9d61a57b6 #v2.6.0
-#         with:
-#           cosign-release: 'v1.13.1'
-
-
-      # Workaround: https://github.com/docker/build-push-action/issues/461
       - name: Setup Docker buildx
         uses: docker/setup-buildx-action@v2.5.0
-        with:
-          buildkitd-flags: --debug
 
-      # Login against a Docker registry except on PR
-      # https://github.com/docker/login-action
       - name: Log into docker registry
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v2.1.0
@@ -46,14 +28,91 @@ jobs:
           username: ${{ secrets.YC_CI_REGISTRY_USER }}
           password: ${{ secrets.YC_CI_REGISTRY_PASSWORD }}
 
-      # Extract metadata (tags, labels) for Docker
-      # https://github.com/docker/metadata-action
-#       - name: Extract Docker metadata
-#         id: meta
-#         uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
-#         with:
-#           images: ${{ secrets.YC_CI_REGISTRY }}/${{ secrets.YC_CI_REGISTRY_ID }}
-      
+      - name: Extract Image Tag
+        id: set-img-tag
+        run: |
+          cd ./frontend
+          VERSION_TAG=`grep -E "^\s+\"version\": \"[0-9]+?\.[0-9]+?\.[0-9]+?\",$" package.json | grep -Eo "[0-9]+?\.[0-9]+?\.[0-9]+?"`
+          IMG_TAG=${{ secrets.YC_CI_REGISTRY }}/${{ secrets.YC_CI_REGISTRY_ID }}/logo-ui:${VERSION_TAG}
+          echo "::set-output name=img-tag::${IMG_TAG}"
+
+      - name: Build and push Docker image
+        id: build-and-push
+        uses: docker/build-push-action@v4.0.0
+        with:
+          context: ./frontend
+          build-args: |
+            REACT_APP_APP_ENV=production
+            REACT_APP_API_URL=https://back.apps.konstant-anxiety.ru
+            REACT_APP_KC_URL=https://auth.apps.konstant-anxiety.ru
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.set-img-tag.outputs.img-tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
+
+  build-base-base:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v2.5.0
+
+      - name: Log into docker registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v2.1.0
+        with:
+          registry: ${{ secrets.YC_CI_REGISTRY }}/${{ secrets.YC_CI_REGISTRY_ID }}
+          username: ${{ secrets.YC_CI_REGISTRY_USER }}
+          password: ${{ secrets.YC_CI_REGISTRY_PASSWORD }}
+
+      - name: Extract Image Tag
+        id: set-img-tag
+        run: |
+          IMG_TAG=${YC_CI_REGISTRY}/${YC_CI_REGISTRY_ID}/logo-base-base-image:latest
+          echo "::set-output name=img-tag::${IMG_TAG}"
+
+      - name: Build and push Docker image
+        id: build-and-push
+        uses: docker/build-push-action@v4.0.0
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile.base
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.set-img-tag.outputs.img-tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
+
+  build-base:
+    runs-on: ubuntu-latest
+    if: ${{ always() }}  # allow skipping base-base image build
+    needs: build-base-base
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v2.5.0
+
+      - name: Log into docker registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v2.1.0
+        with:
+          registry: ${{ secrets.YC_CI_REGISTRY }}/${{ secrets.YC_CI_REGISTRY_ID }}
+          username: ${{ secrets.YC_CI_REGISTRY_USER }}
+          password: ${{ secrets.YC_CI_REGISTRY_PASSWORD }}
+
       - name: Extract Image Tag
         id: set-img-tag
         run: |
@@ -61,31 +120,105 @@ jobs:
           IMG_TAG=${{ secrets.YC_CI_REGISTRY }}/${{ secrets.YC_CI_REGISTRY_ID }}/logo-base-image:${BASE_IMG_VERSION}
           echo "::set-output name=img-tag::${IMG_TAG}"
 
-      # Build and push Docker image with Buildx (don't push on PR)
-      # https://github.com/docker/build-push-action
       - name: Build and push Docker image
         id: build-and-push
         uses: docker/build-push-action@v4.0.0
         with:
           context: ./backend
           push: ${{ github.event_name != 'pull_request' }}
-          # tags: ${{ steps.set-img-tag.outputs.img-tag }}
-          tags: ${{ secrets.YC_CI_REGISTRY }}/${{ secrets.YC_CI_REGISTRY_ID }}/logo-base-image:test-gh
-#           labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.set-img-tag.outputs.img-tag }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: false
+  
+  build-worker:
+    runs-on: ubuntu-latest
+    if: ${{ always() }}  # allow skipping base image build
+    needs: [build-base-base, build-base]
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v2.5.0
 
-      # Sign the resulting Docker image digest except on PRs.
-      # This will only write to the public Rekor transparency log when the Docker
-      # repository is public to avoid leaking data.  If you would like to publish
-      # transparency data even for private images, pass --force to cosign below.
-      # https://github.com/sigstore/cosign
-#       - name: Sign the published Docker image
-#         if: ${{ github.event_name != 'pull_request' }}
-#         env:
-#           COSIGN_EXPERIMENTAL: "true"
-#         # This step uses the identity token to provision an ephemeral certificate
-#         # against the sigstore community Fulcio instance.
-#         run: echo "${{ steps.meta.outputs.tags }}" | xargs -I {} cosign sign {}@${{ steps.build-and-push.outputs.digest }}
+      - name: Log into docker registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v2.1.0
+        with:
+          registry: ${{ secrets.YC_CI_REGISTRY }}/${{ secrets.YC_CI_REGISTRY_ID }}
+          username: ${{ secrets.YC_CI_REGISTRY_USER }}
+          password: ${{ secrets.YC_CI_REGISTRY_PASSWORD }}
+
+      - name: Extract Image Tag
+        id: set-img-tag
+        run: |
+          BASE_IMG_VERSION=`cat backend/base_img_version`
+          cd ./backend/app/logo_worker
+          VERSION_TAG=`grep -E "__version__ = " setup.py | grep -Eo "[0-9]+?\.[0-9]+?\.[0-9]+?"`
+          IMG_TAG=${{ secrets.YC_CI_REGISTRY }}/${{ secrets.YC_CI_REGISTRY_ID }}/logo-worker:${VERSION_TAG}
+          echo "::set-output name=img-tag::${IMG_TAG}"
+          echo "::set-output name=base-img-version::${BASE_IMG_VERSION}"
+
+      - name: Build and push Docker image
+        id: build-and-push
+        uses: docker/build-push-action@v4.0.0
+        with:
+          context: ./backend/app/logo_worker
+          build-args: |
+            BASE_IMG_VERSION=${{ steps.set-img-tag.outputs.base-img-version }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.set-img-tag.outputs.img-tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
+          
+  build-api:
+    runs-on: ubuntu-latest
+    if: ${{ always() }}  # allow skipping base image build
+    needs: [build-base-base, build-base]
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v2.5.0
+
+      - name: Log into docker registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v2.1.0
+        with:
+          registry: ${{ secrets.YC_CI_REGISTRY }}/${{ secrets.YC_CI_REGISTRY_ID }}
+          username: ${{ secrets.YC_CI_REGISTRY_USER }}
+          password: ${{ secrets.YC_CI_REGISTRY_PASSWORD }}
+
+      - name: Extract Image Tag
+        id: set-img-tag
+        run: |
+          BASE_IMG_VERSION=`cat backend/base_img_version`
+          cd ./backend/app/logo_api
+          VERSION_TAG=`grep -E "__version__ = " setup.py | grep -Eo "[0-9]+?\.[0-9]+?\.[0-9]+?"`
+          IMG_TAG=${{ secrets.YC_CI_REGISTRY }}/${{ secrets.YC_CI_REGISTRY_ID }}/logo-api:${VERSION_TAG}
+          echo "::set-output name=img-tag::${IMG_TAG}"
+          echo "::set-output name=base-img-version::${BASE_IMG_VERSION}"
+
+      - name: Build and push Docker image
+        id: build-and-push
+        uses: docker/build-push-action@v4.0.0
+        with:
+          context: ./backend/app/logo_api
+          build-args: |
+            BASE_IMG_VERSION=${{ steps.set-img-tag.outputs.base-img-version }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.set-img-tag.outputs.img-tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
