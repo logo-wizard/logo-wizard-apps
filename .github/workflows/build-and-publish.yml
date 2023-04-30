@@ -67,7 +67,8 @@ jobs:
         with:
           context: ./backend
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.set-img-tag.outputs.img-tag }}
+          # tags: ${{ steps.set-img-tag.outputs.img-tag }}
+          tags: test-gh
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
