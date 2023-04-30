@@ -57,8 +57,6 @@ services:
       REDIS_PASSWORD: *c-redis-password
     ports:
       - "6370:6379"
-    volumes:
-      - ./docker-data-volumes/redis:/bitnami/redis/data
 
   s3-storage:
     image: zenko/cloudserver
