@@ -28,6 +28,7 @@ jobs:
         uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./backend/app/logo_api/docker-compose.tests.yaml"
+          up-flags: "--detach"
 
       - name: Install Dependencies
         run: |
@@ -39,3 +40,4 @@ jobs:
         run: |
           cd ./backend/app/logo_api
           pytest --log-cli-level=INFO tests
+          docker ps
