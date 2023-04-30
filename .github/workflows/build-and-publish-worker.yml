@@ -1,0 +1,55 @@
+name: Build & Publish Worker
+
+on:
+  workflow_run:
+    workflows: [ "Build & Publish Backend Base Image" ]
+    types:
+      - completed
+  workflow_dispatch:
+    branches: [ "main" ]
+
+jobs:
+  build-worker:
+    runs-on: ubuntu-latest
+    if: ${{ contains(fromJSON('["success", "cancelled", "skipped"]'), github.event.workflow_run.conclusion) }}  # allow skipping base image build
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v2.5.0
+
+      - name: Log into docker registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v2.1.0
+        with:
+          registry: ${{ secrets.YC_CI_REGISTRY }}/${{ secrets.YC_CI_REGISTRY_ID }}
+          username: ${{ secrets.YC_CI_REGISTRY_USER }}
+          password: ${{ secrets.YC_CI_REGISTRY_PASSWORD }}
+
+      - name: Extract Image Tag
+        id: set-img-tag
+        run: |
+          BASE_IMG_VERSION=`cat backend/base_img_version`
+          cd ./backend/app/logo_worker
+          VERSION_TAG=`grep -E "__version__ = " setup.py | grep -Eo "[0-9]+?\.[0-9]+?\.[0-9]+?"`
+          IMG_TAG=${{ secrets.YC_CI_REGISTRY }}/${{ secrets.YC_CI_REGISTRY_ID }}/logo-worker:${VERSION_TAG}
+          echo "::set-output name=img-tag::${IMG_TAG}"
+          echo "::set-output name=base-img-version::${BASE_IMG_VERSION}"
+
+      - name: Build and push Docker image
+        id: build-and-push
+        uses: docker/build-push-action@v4.0.0
+        with:
+          context: ./backend/app/logo_worker
+          build-args: |
+            BASE_IMG_VERSION=${{ steps.set-img-tag.outputs.base-img-version }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.set-img-tag.outputs.img-tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
