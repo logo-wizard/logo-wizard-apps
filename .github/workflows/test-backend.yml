@@ -26,7 +26,8 @@ jobs:
 
       - name: Set Up External Services for Tests in Docker Compose
         uses: isbang/compose-action@v1.4.1
-        compose-file: "./backend/app/logo_api/docker-compose.tests.yaml"
+        with:
+          compose-file: "./backend/app/logo_api/docker-compose.tests.yaml"
 
       - name: Install Dependencies
         run: |
