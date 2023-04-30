@@ -1,0 +1,39 @@
+name: Test Backend Apps
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+    branches: [ "main" ]
+
+jobs:
+  test-api:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Set Up External Services for Tests in Docker Compose
+        uses: isbang/compose-action@v1.4.1
+        compose-file: "./backend/app/logo_api/docker-compose.tests.yaml"
+
+      - name: Install Dependencies
+        run: |
+          cd ./backend/app/logo_api
+          pip install --upgrade pip
+          pip install -Ue ".[develop]"
+
+      - name: Run Tests
+        run: |
+          pytest --log-cli-level=INFO tests

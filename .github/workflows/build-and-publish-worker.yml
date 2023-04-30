@@ -11,7 +11,7 @@ on:
 jobs:
   build-worker:
     runs-on: ubuntu-latest
-    if: ${{ contains(fromJSON('["success", "cancelled", "skipped"]'), github.event.workflow_run.conclusion) }}  # allow skipping base image build
+    if: ${{ contains(fromJSON('["success", "cancelled", "skipped"]'), github.event.workflow_run.conclusion) || github.event_name == 'workflow_dispatch'}}  # allow skipping base image build
     permissions:
       contents: read
       packages: write
