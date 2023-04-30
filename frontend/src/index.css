@@ -1,0 +1,279 @@
+@import 'bootstrap_custom.css';
+@import 'loading.min.css';
+@import 'ldbutton.min.css';
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /*background-color: #282c34;*/
+}
+
+@import url("https://fonts.googleapis.com/css?family=Montserrat:400,400i,700");
+
+/* http://meyerweb.com/eric/tools/css/reset/
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font: inherit;
+    vertical-align: baseline;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: bold;
+}
+
+h1 {
+    font-size: 2em;
+}
+
+h2 {
+    font-size: 1.5em;
+}
+
+h4 {
+    font-size: 1em;
+}
+
+h5 {
+    font-size: 0.8em;
+}
+
+p {
+    /*line-height: 16px;*/
+}
+
+small {
+    font-size: 0.8em;
+}
+
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+    display: block;
+}
+body {
+    line-height: 1;
+}
+ol, ul {
+    list-style: none;
+}
+blockquote, q {
+    quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+    content: '';
+    content: none;
+}
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+/* frontend/src/index.css  */
+/*body {*/
+/*  margin: 0;*/
+/*  padding: 0;*/
+/*  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",*/
+/*    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",*/
+/*    sans-serif;*/
+/*  -webkit-font-smoothing: antialiased;*/
+/*  -moz-osx-font-smoothing: grayscale;*/
+/*  background-color: #282c34;*/
+/*}*/
+/*.todo-title {*/
+/*  cursor: pointer;*/
+/*}*/
+/*.completed-todo {*/
+/*  text-decoration: line-through;*/
+/*}*/
+/*.tab-list > span {*/
+/*  padding: 5px 8px;*/
+/*  border: 1px solid #282c34;*/
+/*  border-radius: 10px;*/
+/*  margin-right: 5px;*/
+/*  cursor: pointer;*/
+/*}*/
+/*.tab-list > span.active {*/
+/*  background-color: #282c34;*/
+/*  color: #ffffff;*/
+/*}*/
+
+
+body {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Montserrat, sans-serif;
+    /*background-image: linear-gradient(90deg, #6fc6a9, #058ba9);*/
+    margin: 30px;
+}
+
+.main {
+    padding: 0 50px 0 50px;
+}
+
+.main > h1,
+.main > p {
+    text-align: center;
+}
+
+.main > h1 {
+    margin: 30px;
+    color: #ffffff;
+}
+
+.main > p {
+    font-size: 20px;
+    margin-top: 10px;
+    margin-bottom: 40px;
+}
+
+/* стили для элемента body */
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+}
+
+h6{margin-bottom:.5rem;font-weight:500;line-height:1.2}
+
+.blockquote-6 {
+    border-left: 6px solid #6ec5aa;
+    font-size: 16px;
+    font-style: italic;
+    margin: 16px;
+    padding: 16px 24px;
+    position: relative;
+    line-height: 25px;
+}
+.blockquote-6:before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: -6px;
+    height: 40px;
+    background-color: #fff;
+    width: 6px;
+    margin-top: -1em;
+}
+.blockquote-6:after {
+    content: "”";
+    position: absolute;
+    top: 50%;
+    left: -20px;
+    color: #4aacaa;
+    font-size: 50px;
+    font-family: Times, sans-serif;
+    font-weight: bold;
+    line-height: 30px;
+}
+.blockquote-6 cite {
+    color: #4aacaa;
+    font-size: 15px;
+    padding-top: 10px;
+    display: block;
+    text-align: right;
+}
+
+.main-words {
+    line-height: 28px;
+    /*text-indent: 20px;*/
+}
+
+.main-words.smaller {
+    font-size:  15px;
+    text-align: justify;
+    margin-bottom: 10px;
+}
+
+.main-words.smaller.cite {
+    text-decoration: underline;
+    text-align: center;
+}
+
+.inverted {
+    background-color:  black;
+    color:  white;
+}
+
+.thumb-wrap {
+    position: relative;
+    padding-bottom: 56.25%; /* задаёт высоту контейнера для 16:9 (если 4:3 — поставьте 75%) */
+    height: 0;
+    overflow: hidden;
+}
+.thumb-wrap iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-width: 0;
+    outline-width: 0;
+}
+
+.head, .menu-wrapper {
+    /*line-height: 1.15;*/
+}
+
+/* ------------------------------------------------------------ */
+
+.logo-title {
+    cursor: pointer;
+}
+
+.tab-list > span {
+    padding: 5px 8px;
+    border: 1px solid #282c34;
+    border-radius: 10px;
+    margin-right: 5px;
+    cursor: pointer;
+}
+
+.tab-list > span.active {
+    background-color: #282c34;
+    color: #ffffff;
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+}
+
+.line-height-1_5 {
+    line-height: 1.3em;
+}
+
+.btn-ld-override:after {
+    transform-origin: 0 2px;
+    transform: translateY(-1px) scale(0.5);
+}
+
+.ld-ext-right.running {
+    padding-right: 0.8em !important;
+}

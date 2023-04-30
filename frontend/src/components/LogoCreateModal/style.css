@@ -1,0 +1,15 @@
+.logo-create-modal .modal-dialog .modal-content {
+    min-height: 70vh;
+    max-height: 70vh;
+    overflow: scroll;
+}
+
+.logo-modal-body {
+    padding: 40px !important;
+}
+
+@media (max-height: 800px) {
+    .logo-modal-body {
+        padding: 20px !important;
+    }
+}

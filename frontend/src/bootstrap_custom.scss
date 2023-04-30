@@ -1,0 +1,9 @@
+$theme-colors: (
+        //"info": tomato,
+        "danger": #ec0000,
+        "primary": #015ce3,
+        "dark": #212529,
+);
+
+//@import "~/bootstrap/scss/bootstrap";
+@import "../node_modules/bootstrap/scss/bootstrap";

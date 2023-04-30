@@ -1,0 +1,44 @@
+a.arrow {
+    display: block;
+    width: 20px;
+    height: 20px;
+    box-sizing: border-box;
+    transform: rotate(-135deg);
+}
+
+a.arrow::before {
+    content: "";
+    width: 100%;
+    height: 100%;
+    border-width: 2px 2px 0 0;
+    border-style: solid;
+    border-color: #21242a;
+    transition: 0.2s ease;
+    display: block;
+    transform-origin: 100% 0;
+}
+
+a.arrow:after {
+    content: "";
+    float: left;
+    position: relative;
+    top: -100%;
+    width: 100%;
+    height: 100%;
+    border-width: 0 2px 0 0;
+    border-style: solid;
+    border-color: #21242a;
+    transform-origin: 100% 0;
+    transition: 0.2s ease;
+}
+
+a.arrow:hover::after {
+    transform: rotate(45deg) translateX(1px) translateY(1px);
+    border-color: #5584b8;
+    height: 120%;
+}
+
+a.arrow:hover::before {
+    border-color: #5584b8;
+    /*transform: scale(0.8);*/
+}

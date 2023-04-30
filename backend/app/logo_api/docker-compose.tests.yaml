@@ -1,0 +1,66 @@
+version: '3.7'
+
+x-constants:
+  REDIS_PASSWORD: &c-redis-password dummy_test_password_123
+  PG_USER: &c-pg-user "logo_pg_user"
+  PG_PASSWORD: &c-pg-pass "logo_pg_pass"
+  PG_DB: &c-pg-db "logodb"
+
+
+services:
+  postgres:
+    image: postgres:12
+    # newer versions may cause `SCRAM authentication requires libpq version 10 or above` error on some systems, so upgrading it may be painful
+    # see also: https://support.kaspersky.ru/15658
+    environment:
+      POSTGRES_USER: *c-pg-user
+      POSTGRES_PASSWORD: *c-pg-pass
+      POSTGRES_DB: *c-pg-db
+    ports:
+      - '5433:5432'
+    volumes:
+      - ./docker-data-volumes/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB" ]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    environment:
+      DB_VENDOR: "postgres"
+      DB_ADDR: "postgres"
+      DB_DATABASE: "logodb"
+      DB_SCHEMA: "public"
+      DB_USER: *c-pg-user
+      DB_PASSWORD: *c-pg-pass
+      KC_DB: "postgres"
+      KC_DB_URL: "jdbc:postgresql://postgres/logodb"
+      KC_DB_USERNAME: *c-pg-user
+      KC_DB_PASSWORD: *c-pg-pass
+      KC_HOSTNAME: localhost
+#      KC_HTTP_RELATIVE_PATH: "/auth"
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - '28080:8080'
+    command:
+      - start-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  redis:
+    image: 'bitnami/redis:latest'
+    environment:
+      REDIS_PASSWORD: *c-redis-password
+    ports:
+      - "6370:6379"
+    volumes:
+      - ./docker-data-volumes/redis:/bitnami/redis/data
+
+  s3-storage:
+    image: zenko/cloudserver
+    ports:
+      - "8001:8000"

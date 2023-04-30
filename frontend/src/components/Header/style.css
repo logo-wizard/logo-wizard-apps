@@ -1,0 +1,60 @@
+.my-nav {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    justify-content: center;
+    padding: 1em 2em;
+    box-shadow: 0 2px 20px rgb(0 0 0 / 20%);
+}
+
+.nav-title {
+    flex: 4 1 60%;
+    margin: auto;
+    font-size: 3em;
+    text-align: center;
+    font-family: Impact, Charcoal, sans-serif;
+}
+
+.nav-btn {
+    flex: 1 1 20%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.profile-corner {
+    flex: 1 1 20%;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    gap: 10px;
+}
+
+@media (max-width: 767px) {
+    .my-nav {
+        padding: 1em;
+    }
+
+    .my-nav > div {
+        justify-content: center;
+    }
+
+    .profile-corner {
+        flex-direction: column;
+        gap: 6px;
+    }
+}
+
+.avatar-wrapper {
+    -webkit-transition: all 0.2s ease; /* Safari and Chrome */
+    -moz-transition: all 0.2s ease; /* Firefox */
+    -ms-transition: all 0.2s ease; /* IE 9 */
+    -o-transition: all 0.2s ease; /* Opera */
+    transition: all 0.2s ease;
+}
+
+.avatar-wrapper:hover {
+    transform: perspective(600px) rotateY(-15deg) rotateX(-10deg);
+}

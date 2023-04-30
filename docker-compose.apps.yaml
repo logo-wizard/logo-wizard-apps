@@ -1,0 +1,49 @@
+version: '3.7'
+
+x-constants:
+  REDIS_HOST: &c-redis-host "host.docker.internal"
+  REDIS_PORT: &c-redis-port "6370"
+  REDIS_PASSWORD: &c-redis-password dummy_test_password_123
+
+services:
+  logo-api:
+    container_name: logo-api
+    env_file:
+      - ./backend/.env
+    environment:
+      REDIS_ARQ__HOST: *c-redis-host
+      REDIS_ARQ__PORT: *c-redis-port
+      REDIS_ARQ__PASSWORD: *c-redis-password
+      REDIS_MISC__PASSWORD: *c-redis-password
+    build: ./backend/app/logo_api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./docker-data-volumes/models:/models
+
+  logo-worker:
+    container_name: logo-worker
+    env_file:
+      - ./backend/.env
+    environment:
+      REDIS_ARQ__HOST: *c-redis-host
+      REDIS_ARQ__PORT: *c-redis-port
+      REDIS_ARQ__PASSWORD: *c-redis-password
+      REDIS_MISC__PASSWORD: *c-redis-password
+      SD__MOCK: 1
+      SD__USE_DIFFUSERS: '0'
+      SD__BASE_MODEL_PATH: ''
+      SD__REPO: ''
+      SD__HF_TOKEN: ''
+      SD__H: 512
+      SD__W: 512
+      TEXT_DETECTOR__DEVICE: 'cpu'
+      TEXT_DETECTOR__DETECTOR: 'dbnetpp'
+      TEXT_ERASER__DEVICE: 'cpu'
+      TEXT_ERASER__MODEL_PATH: '/models/big-lama.pt'
+      STYLER__MOCK: 1
+    build: ./backend/app/logo_worker
+    volumes:
+      - ./docker-data-volumes/models:/models
+      - ./docker-data-volumes/configs:/configs
+      - ./docker-data-volumes/outputs:/outputs

@@ -1,0 +1,74 @@
+.logo-card-image, .logo-card {
+    -webkit-transition: all 0.8s ease; /* Safari and Chrome */
+    -moz-transition: all 0.8s ease; /* Firefox */
+    -ms-transition: all 0.8s ease; /* IE 9 */
+    -o-transition: all 0.8s ease; /* Opera */
+    transition: all 0.8s ease;
+    z-index: 0;
+}
+
+.logo-card:hover .logo-card-image {
+    -webkit-transform:scale(1.15); /* Safari and Chrome */
+    -moz-transform:scale(1.15); /* Firefox */
+    -ms-transform:scale(1.15); /* IE 9 */
+    -o-transform:scale(1.15); /* Opera */
+    transform:scale(1.15);
+}
+
+.logo-card:hover {
+    box-shadow: 0 2px 20px rgb(0 0 0 / 20%);
+}
+
+.logo-cards-container {
+    box-sizing: border-box;
+    display: flex;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    align-items: center;
+    margin: 0;
+    /*background-color: #f7f8fc;*/
+    /*font-family: "Roboto", sans-serif;*/
+    color: #10182f;
+    margin-bottom: 50px;
+    padding: 20px;
+}
+
+.regen-icon-wrapper {
+    height: 0;
+    position: relative;
+    top: 10px;
+    left: 10px;
+    z-index: 1;
+}
+
+.regen-icon {
+    transition: all 0.5s ease;
+    opacity: 0;
+}
+
+.logo-card:hover .regen-icon {
+    transition: all 0.5s ease;
+    opacity: 0.6;
+}
+
+.regen-icon::before {
+    position: relative;
+    top: 2px;
+    transition: all 0.5s ease;
+    content: url("data:image/svg+xml,%3C%3Fxml version='1.0' encoding='utf-8'%3F%3E%3C!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools --%3E%3Csvg width='100%' height='15px' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='none' stroke='%23000000' stroke-width='2' d='M20,8 C18.5343681,5.03213345 15.4860999,3 11.9637942,3 C7.01333514,3 3,7.02954545 3,12 M4,16 C5.4656319,18.9678666 8.51390007,21 12.0362058,21 C16.9866649,21 21,16.9704545 21,12 M9,16 L3,16 L3,22 M21,2 L21,8 L15,8'/%3E%3C/svg%3E");
+}
+
+.regen-icon-wrapper:hover .regen-icon::before {
+    content: url("data:image/svg+xml,%3C%3Fxml version='1.0' encoding='utf-8'%3F%3E%3C!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools --%3E%3Csvg width='100%' height='15px' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='none' stroke='%23ffffff' stroke-width='2' d='M20,8 C18.5343681,5.03213345 15.4860999,3 11.9637942,3 C7.01333514,3 3,7.02954545 3,12 M4,16 C5.4656319,18.9678666 8.51390007,21 12.0362058,21 C16.9866649,21 21,16.9704545 21,12 M9,16 L3,16 L3,22 M21,2 L21,8 L15,8'/%3E%3C/svg%3E")
+}
+
+.regen-icon:hover {
+    opacity: 1 !important;
+}
+
+.regen-icon.processing {
+    opacity: 0 !important;
+    cursor: unset !important;
+}

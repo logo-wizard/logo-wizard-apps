@@ -1,0 +1,17 @@
+FROM python:3.10-slim-buster AS base
+
+RUN \
+  apt-get update && \
+  apt-get install -y \
+    python3-opencv
+
+RUN apt-get install -y build-essential
+
+RUN pip install "openmim>=0.3.7"
+RUN pip install "torch==1.13.1"
+RUN pip install "torchvision==0.14.1"
+
+RUN mim install mmengine
+RUN mim install 'mmcv>=2.0.0rc1'
+RUN mim install 'mmdet>=3.0.0rc0'
+RUN mim install mmocr
