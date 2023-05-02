@@ -138,7 +138,7 @@ async def create_s3_bucket(s3_client: aiobotocore.client.AioBaseClient, bucket_n
     LOGGER.info(resp)
 
 
-@pytest.fixture(scope='session', autouse=True)
+@pytest.fixture(autouse=True)
 async def prepare_pg_for_tests(pg_settings) -> None:
     pg_pool = await asyncpg.create_pool(
         min_size=10,
