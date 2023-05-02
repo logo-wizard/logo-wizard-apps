@@ -184,7 +184,7 @@ const ProfilePage: FC<ProfilePageProps> = ({other = false}) => {
                     <h2 style={{textAlign: 'center'}}>
                         Похоже, здесь пока нет ни одного логотипа
                     </h2>
-                    <RenderOnOwner user_id={user_id}>
+                    <RenderOnOwner user_id={user_id || userInfo?.id}>
                         <Button variant={'primary'} onClick={() => navigate('/')}>
                             Создать
                         </Button>
