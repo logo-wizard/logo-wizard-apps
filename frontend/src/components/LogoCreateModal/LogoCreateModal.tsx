@@ -30,7 +30,25 @@ const LogoCreateModal: FC<ModalProps> = ({activeItem, toggle, onSave}) => {
     const [nLogosToCreate, setNLogosToCreate] = useState<number>(2);
     const [step, setStep] = useState<number>(0);
 
+    const canGoToNextStep = () => {
+        // Validates current step
+
+        let errorMsg = null;
+
+        if (step === 1 && activeItem.specialization.length < 1) {
+            errorMsg = 'Нужно выбрать хотя бы одну специализацию';
+        }
+
+        if (step === 2 && item.palette === '') {
+            errorMsg = 'Нужно выбрать палитру';
+        }
+
+        return errorMsg;
+    }
+
     const nextStep = () => {
+        // Calls step validation, shows validation error message or switches to the next step
+
         setStep((currentStep) => {
             let errMsg = canGoToNextStep();
             if (errMsg !== null) {
@@ -54,21 +72,9 @@ const LogoCreateModal: FC<ModalProps> = ({activeItem, toggle, onSave}) => {
         toggle();
     }
 
-    const canGoToNextStep = () => {
-        let errorMsg = null;
-
-        if (step === 1 && activeItem.specialization.length < 1) {
-            errorMsg = 'Нужно выбрать хотя бы одну специализацию';
-        }
-
-        if (step === 2 && item.palette === '') {
-            errorMsg = 'Нужно выбрать палитру';
-        }
-
-        return errorMsg;
-    }
-
     useEffect(() => {
+        // Sets `Enter` as the key that switches to the next step for all steps except the last one
+
         const keyDownHandler = (e: KeyboardEvent) => {
             if (e.key === 'Enter') {
                 e.preventDefault();

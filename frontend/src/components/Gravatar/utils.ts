@@ -26,4 +26,5 @@ export const getInitials = (name: string) => {
         .map(w => [...w][0])
         .slice(0, 3)
         .join('')
+        .toUpperCase()
 }

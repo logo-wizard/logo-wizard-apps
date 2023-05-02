@@ -4,39 +4,96 @@ x-constants:
   REDIS_HOST: &c-redis-host "host.docker.internal"
   REDIS_PORT: &c-redis-port "6370"
   REDIS_PASSWORD: &c-redis-password dummy_test_password_123
+  S3_HOST: &c-s3-host http://host.docker.internal:50000
+  S3_ACCESS_KEY_ID: &c-s3-access-key-id accessKey1
+  S3_SECRET_KEY: &c-s3-secret-key verySecretKey1
+  S3_BUCKET: &c-s3-bucket s3-logo
 
 services:
   logo-api:
-    container_name: logo-api
-    env_file:
-      - ./backend/.env
     environment:
       REDIS_ARQ__HOST: *c-redis-host
       REDIS_ARQ__PORT: *c-redis-port
+      REDIS_ARQ__DB: 1
+      REDIS_ARQ__SSL: 0
       REDIS_ARQ__PASSWORD: *c-redis-password
+      REDIS_MISC__HOST: *c-redis-host
+      REDIS_MISC__PORT: *c-redis-port
+      REDIS_MISC__DB: 2
+      REDIS_MISC__SSL: 0
       REDIS_MISC__PASSWORD: *c-redis-password
+      PG__HOST: 'host.docker.internal'
+      PG__PORT: 5433
+      PG__USERNAME: 'logo_pg_user'
+      PG__PASSWORD: 'logo_pg_pass'
+      PG__DB_NAME: 'logodb'
+      COLORIZATION__MOCK: 0
+      COLORIZATION__MODEL_DIR: ""
+      COLORIZATION__MODEL_FILENAME: ""
+      S3__HOST: *c-s3-host
+      S3__BUCKET: *c-s3-bucket
+      S3__ACCESS_KEY_ID: *c-s3-access-key-id
+      S3__SECRET_KEY: *c-s3-secret-key
+      CORS__ALLOW_ORIGINS: 'http://localhost:8080,http://localhost:3000'
+      CORS__ALLOW_HEADERS: 'Origin,X-Requested-With,Content-Type,Accept,Authorization'
+      CORS__ALLOW_METHODS: 'GET,PATCH,PUT,POST,DELETE,OPTIONS'
+      CORS__ALLOW_CREDENTIALS: 1
+      CORS__EXPOSED_ROUTES: '/api/v1/ping'
+      KEYCLOAK__HOST: 'http://host.docker.internal:28080/'
+      KEYCLOAK__REALM: 'logo'
+      KEYCLOAK__CLIENT_ID: 'logo-backend'
+      KEYCLOAK__CLIENT_SECRET_KEY: 'EdvR8ZBUqKgoZmrairQx5pfIN7GwKfoh'
+      KEYCLOAK__CLIENT_PUBLIC_KEY: ''
+      KEYCLOAK__ADMIN_USERNAME: 'admin'
+      KEYCLOAK__ADMIN_PASSWORD: 'admin'
     build: ./backend/app/logo_api
     ports:
-      - "8000:8000"
+      - "8080:8000"
     volumes:
       - ./docker-data-volumes/models:/models
 
   logo-worker:
-    container_name: logo-worker
-    env_file:
-      - ./backend/.env
     environment:
       REDIS_ARQ__HOST: *c-redis-host
       REDIS_ARQ__PORT: *c-redis-port
+      REDIS_ARQ__DB: 1
+      REDIS_ARQ__SSL: 0
       REDIS_ARQ__PASSWORD: *c-redis-password
+      REDIS_MISC__HOST: *c-redis-host
+      REDIS_MISC__PORT: *c-redis-port
+      REDIS_MISC__DB: 2
+      REDIS_MISC__SSL: 0
       REDIS_MISC__PASSWORD: *c-redis-password
+      S3__HOST: *c-s3-host
+      S3__BUCKET: *c-s3-bucket
+      S3__ACCESS_KEY_ID: *c-s3-access-key-id
+      S3__SECRET_KEY: *c-s3-secret-key
       SD__MOCK: 1
-      SD__USE_DIFFUSERS: '0'
+      SD__USE_DIFFUSERS: 1
       SD__BASE_MODEL_PATH: ''
       SD__REPO: ''
       SD__HF_TOKEN: ''
       SD__H: 512
       SD__W: 512
+      SD__OUTDIR: /outputs
+      SD__SKIP_GRID: 1
+      SD__SKIP_SAVE: 0
+      SD__DDIM_STEPS: 50
+      SD__PLMS: 1
+      SD__LAION400M: 0
+      SD__FIXED_CODE: 0
+      SD__DDIM_ETA: 0.0
+      SD__N_ITER: 1
+      SD__C: 4
+      SD__F: 8
+      SD__N_SAMPLES: 1
+      SD__N_ROWS: 0
+      SD__SCALE: 8
+      SD__FROM_FILE: 0
+      SD__CONFIG: /configs/stable-diffusion_v1-inference.yaml
+      SD__CKPT: /models/model.ckpt
+      SD__SEED: 42
+      SD__PRECISION: full
       TEXT_DETECTOR__DEVICE: 'cpu'
       TEXT_DETECTOR__DETECTOR: 'dbnetpp'
       TEXT_ERASER__DEVICE: 'cpu'

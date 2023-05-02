@@ -15,10 +15,11 @@ interface StyleOptionProps {
     text: string
     value: string
     onChange: (newStyle: string) => void
+    disabled: boolean
 }
 
 
-const StyleOption: FC<StyleOptionProps> = ({currentStyle, text, value, onChange}) => {
+const StyleOption: FC<StyleOptionProps> = ({currentStyle, text, value, onChange, disabled}) => {
     const isChecked = () => currentStyle === value;
 
     const handleChange = (_: React.MouseEvent<HTMLInputElement>) => {
@@ -35,6 +36,7 @@ const StyleOption: FC<StyleOptionProps> = ({currentStyle, text, value, onChange}
                 type={'radio'}
                 onClick={handleChange}
                 onChange={(_: ChangeEvent<HTMLInputElement>) => {}}
+                disabled={disabled}
             />
             {text}
         </label>
@@ -66,6 +68,7 @@ const StyleStep: FC<StepProps> = ({onStyleChanged, current}) => {
                             text={option.text}
                             value={option.value}
                             onChange={onStyleChanged}
+                            disabled={false}
                         />
                     </React.Fragment>
                 ))}

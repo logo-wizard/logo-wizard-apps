@@ -4,6 +4,8 @@ from logo_configs.settings_submodels import CORSSettings, KeycloakSettings, Post
 
 class ApiSettings(LogoSettingsCommon):
 
+    APP_ENV: str = 'production'
+
     CORS: CORSSettings = CORSSettings(
         ALLOW_ORIGINS=('*',),
         ALLOW_HEADERS=('DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT'),

@@ -122,7 +122,7 @@ class S3Uploader:
             LOGGER.info(f'Going to create a multipart upload with {chunks_count} chunks')
 
             create_multipart_upload_resp = await client.create_multipart_upload(
-                ACL='bucket-owner-full-control',
+                ACL='public-read',
                 Bucket=self.s3_bucket,
                 Key=key,
             )

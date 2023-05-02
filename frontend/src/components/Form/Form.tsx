@@ -21,6 +21,8 @@ interface FormProps {
 
 
 const Form: FC<FormProps> = ({activeItem, currentIndex, onUpdate, onNLogosChange, stepTitles}) => {
+    // A container of form steps
+
     const [item, setItem] = useState<LogoDraft>(Object.assign({}, activeItem));
 
     const handleTitleChange = (e: ChangeEvent<HTMLInputElement>) => {

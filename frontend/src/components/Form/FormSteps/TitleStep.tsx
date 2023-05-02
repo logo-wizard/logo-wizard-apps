@@ -68,11 +68,6 @@ const TitleStep: FC<StepProps> = (
                     tooltip={'off'}
                     style={{position: 'relative'}}
                 />
-                {/*<Form.Range*/}
-                {/*    value={textToolWidth}*/}
-                {/*    // id={'text-tool-width'}*/}
-                {/*    onChange={(e: ChangeEvent<HTMLInputElement>) => setTextToolWidth(parseInt(e.target.value))}*/}
-                {/*/>*/}
             </div>
         </FormGroup>
     )

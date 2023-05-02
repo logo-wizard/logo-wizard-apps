@@ -9,6 +9,8 @@ interface Props {
 
 
 const RenderOnAuthenticated: FC<Props> = (props) => {
+    // A helper component that renders the passed components only if the user is authenticated
+
     return (UserService.isLoggedIn()) ? (
         <>{props.children}</>
     ) : null

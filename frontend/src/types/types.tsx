@@ -11,9 +11,9 @@ export interface LogoDraft {
     title: string
     is_public: boolean
     status: LogoStatus
-    specialization: string[]  // enum
-    palette: string  // enum
-    style: string  // enum
+    specialization: string[]
+    palette: string
+    style: string
     objects: string[]
 }
 

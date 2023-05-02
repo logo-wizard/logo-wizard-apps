@@ -10,6 +10,8 @@ interface Props {
 
 
 const RenderOnOwner: FC<Props> = (props) => {
+    // A helper component that renders passed components only if the user_id is equal to the passed one
+
     return (UserService.getUserId() === props.user_id) ? (
         <>{props.children}</>
     ) : null

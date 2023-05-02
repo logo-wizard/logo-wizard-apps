@@ -131,6 +131,7 @@ def create_app(settings: ApiSettings) -> web.Application:
                 client_id=settings.KEYCLOAK.CLIENT_ID,
                 client_secret_key=settings.KEYCLOAK.CLIENT_SECRET_KEY,
                 client_public_key=settings.KEYCLOAK.CLIENT_PUBLIC_KEY,
+                fake_user_id='first_user_id' if settings.APP_ENV == 'tests' else None,
             ),
             keycloak_admin_client_middleware(
                 host=settings.KEYCLOAK.HOST,

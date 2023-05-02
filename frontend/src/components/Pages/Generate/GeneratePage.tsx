@@ -1,6 +1,5 @@
 import React, {useState} from "react";
 import Button from "react-bootstrap/Button";
-import {Triangle} from "react-loader-spinner";
 
 import {Logo, LogoDraft, LogoStatus} from "../../../types/types";
 import LogoService from "../../../services/LogoService"
@@ -26,38 +25,6 @@ const GeneratePage = () => {
         status: LogoStatus.in_progress
     });
 
-    function fetchLogos() {
-        // const currentLogoList = [...logoList];
-        //
-        // let anyPending = false;
-        //
-        // for (let i = 0; i < currentLogoList.length; ++i) {
-        //     let logo = currentLogoList[i];
-        //
-        //     if (logo.status !== LogoStatus.in_progress)
-        //         continue;
-        //
-        //     anyPending = true;
-        //     LogoService.getLogoInfo(logo.id)
-        //         .then(res => {
-        //             logo.title = res.data.title;
-        //             logo.status = res.data.status;
-        //             logo.link = res.data.link;
-        //         })
-        //         .catch(err => console.log(err))
-        //
-        // }
-        //
-        // setLogoList(currentLogoList);
-        //
-        // if (anyPending && !polling) {
-        //     setPolling(true);
-        //     setTimeout(() => fetchLogos(), 1000);
-        // } else {
-        //     setPolling(false);
-        // }
-    }
-
     function toggle() {
         setModal(!modal);
     }
@@ -80,7 +47,6 @@ const GeneratePage = () => {
                     };
                     newLogo.id = res.data.logo_id;
                     setLogoList(prevLogoList => [newLogo, ...prevLogoList]);
-                    // fetchLogos();
                 });
         }
     }
@@ -102,7 +68,6 @@ const GeneratePage = () => {
     return (
         <main className="content">
             <Header/>
-            {/*<h1 className="text-center my-4">Генератор Логотипов</h1>*/}
             <div>
                 <div className="col-md-10 col-sm-10 mx-auto p-0">
                     <div className={'d-flex justify-content-center m-5'}>
@@ -114,7 +79,13 @@ const GeneratePage = () => {
                             className={`ld-ext-right ${polling ? 'running' : ''}`}
                         >
                             {polling ? (
-                                    <span>Создаем логотип&nbsp;&nbsp;<div className={'ld ld-ring ld-spin btn-ld-override'} style={{verticalAlign: 'middle', display: 'inline-block', margin: 'auto'}}></div></span>
+                                    <span>
+                                        Создаем логотип&nbsp;&nbsp;
+                                        <div
+                                            className={'ld ld-ring ld-spin btn-ld-override'}
+                                            style={{verticalAlign: 'middle', display: 'inline-block', margin: 'auto'}}
+                                        ></div>
+                                    </span>
                                 ) : (
                                     <span>Создать логотип</span>
                                 )

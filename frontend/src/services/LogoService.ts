@@ -25,7 +25,9 @@ interface colorizeRequestPoints {
 
 
 class LogoService {
-    static configureLogoApi = () => {
+    // Provide and interface to interact with the Logo API
+
+    static configureLogoApi = () => {  // adds auth header to all requests + refreshes token when expired
         logoApi.interceptors.request.use(
             // @ts-ignore
             config => {
@@ -44,8 +46,6 @@ class LogoService {
             }
         );
     };
-
-    static getLinkByKey = (key: string) => `https://storage.yandexcloud.net/s3-logo/${key}`;
 
     static requestGeneration = (logo: LogoDraft) => logoApi.post<LogoCreateResponse>("/api/v1/logo", logo);
 

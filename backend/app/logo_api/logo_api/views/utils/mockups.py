@@ -56,7 +56,7 @@ class S3ImageProvider(ImageProvider):
                 aws_secret_access_key=self.secret_key,
                 aws_access_key_id=self.access_key_id,
         ) as client:
-            await client.put_object(Bucket=self.s3_bucket, Key=key, Body=image_bytes)  # TODO multipart upload?
+            await client.put_object(Bucket=self.s3_bucket, Key=key, Body=image_bytes, ACL='public-read')
 
 
 def alpha_circle(img: np.ndarray) -> np.ndarray:

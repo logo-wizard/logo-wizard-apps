@@ -1,7 +1,6 @@
 import React, {FC, useEffect, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 import {Button} from "react-bootstrap";
-import {Triangle} from "react-loader-spinner";
 import Skeleton from "react-loading-skeleton";
 
 import UserService from "../../../services/UserService";
@@ -11,6 +10,7 @@ import {LogoCardsCollection} from "../../LogoCard/LogoCard";
 import LogoService from "../../../services/LogoService";
 import {Logo, LogoListResponse, UserInfo} from "../../../types/types";
 import RenderOnOwner from "../../RenderOnOwner/RenderOnOwner";
+import TriangleLoader from "../../Loader/Loader";
 
 import './style.css';
 
@@ -48,6 +48,8 @@ const ProfilePage: FC<ProfilePageProps> = ({other = false}) => {
     }
 
     useEffect(() => {
+        // Fetch current user info on load
+
         const fetchUserInfo = () => {
             if (other && user_id) {
                 LogoService.getUserInfo(user_id)
@@ -68,6 +70,8 @@ const ProfilePage: FC<ProfilePageProps> = ({other = false}) => {
     }, [userInfoLoaded]);
 
     useEffect(() => {
+        // Fetch user logo IDs list to then load them
+
         const fetchLogoIdsList = () => {
             if (other && user_id) {
                 LogoService.getUserLogos(user_id)
@@ -95,6 +99,8 @@ const ProfilePage: FC<ProfilePageProps> = ({other = false}) => {
     }, [logoIdsListLoaded]);
 
     useEffect(() => {
+        // Fetch complete logo info by IDs list
+
         const fetchLogoList = () => {
             LogoService.getBatchLogos(logoIdsList)
                 .then(res => {
@@ -119,7 +125,7 @@ const ProfilePage: FC<ProfilePageProps> = ({other = false}) => {
                             username={userInfo!.username}
                             email={userInfo!.email}
                             size={200}
-                            border={'#5584b8 4px solid'}
+                            border={'var(--darker-primary) 4px solid'}
                         />
                         <div className={'profile-username'}>
                             {userInfo!.username}
@@ -136,12 +142,6 @@ const ProfilePage: FC<ProfilePageProps> = ({other = false}) => {
 
             <br/>
 
-            {/*<LogoCardsCollection*/}
-            {/*    amount={3}*/}
-            {/*    loaded={true}*/}
-            {/*    logos={mockLogoList}*/}
-            {/*/>*/}
-
             {!logoIdsListLoaded ? (
                 <div style={{
                     display: 'flex',
@@ -152,18 +152,11 @@ const ProfilePage: FC<ProfilePageProps> = ({other = false}) => {
                     height: '100%',
                     margin: 'auto',
                 }}>
-                    <Triangle
-                        height="100"
-                        width="100"
-                        color="#007bff"
-                        ariaLabel="triangle-loading"
-                        wrapperStyle={{}}
-                        visible={true}
-                    />
+                    <TriangleLoader width={100} height={100}/>
                 </div>
             ) : logoIdsList.logos.length === 0 ? (
                 <div className={'no-logos-area-wrapper'}>
-                    <h2>
+                    <h2 style={{textAlign: 'center'}}>
                         Похоже, здесь пока нет ни одного логотипа
                     </h2>
                     <RenderOnOwner user_id={user_id}>
@@ -181,14 +174,6 @@ const ProfilePage: FC<ProfilePageProps> = ({other = false}) => {
                     withRegen={!other}
                 />
             )}
-
-            {/*<LogoCardCollection>*/}
-            {/*    <LogoCard link={'https://ya.ru'} img={'https://img3.goodfon.ru/original/1024x1024/8/69/priroda-gory-kamni-les.jpg'} text={'asdfqwer'} />*/}
-            {/*    <LogoCard link={'https://ya.ru'} img={'https://img3.goodfon.ru/original/2048x2048/9/86/kariby-more-most-zelen.jpg'} text={'zxcv1234'} />*/}
-            {/*    <LogoCard link={'https://ya.ru'} img={'https://img3.goodfon.ru/original/2048x2048/9/86/kariby-more-most-zelen.jpg'} text={'zxcv1234'} />*/}
-            {/*    <LogoCard link={'https://ya.ru'} img={'https://img3.goodfon.ru/original/2048x2048/9/86/kariby-more-most-zelen.jpg'} text={'zxcv1234'} />*/}
-            {/*    <LogoCard link={'https://ya.ru'} img={'https://img3.goodfon.ru/original/2048x2048/9/86/kariby-more-most-zelen.jpg'} text={'zxcv1234'} />*/}
-            {/*</LogoCardCollection>*/}
         </div>
     )
 }

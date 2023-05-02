@@ -18,15 +18,11 @@ async def download_from_s3(base_url: str, path: str, filename: str, expected_siz
             resp.raise_for_status()
             async with aiofiles.open(filename, 'wb') as fd:
                 while True:
-                    LOGGER.info('Going to get chunk')
                     chunk = await resp.content.read(1024 ** 2 * 10)  # TODO smaller chunks?
-                    LOGGER.info(f'Got chunk of size {len(chunk)}')
                     bytes_read += len(chunk)
                     if not chunk:
                         break
-                    LOGGER.info('Going to wtite chunk into file')
                     await fd.write(chunk)
-                    LOGGER.info('Done writing chunk into file')
                     progress = bytes_read / expected_size_bytes * 100
                     if progress > prev_output_progress + output_step_percent:
                         LOGGER.info(f'Progress: {progress:.3f}%')

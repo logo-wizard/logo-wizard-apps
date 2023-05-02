@@ -9,7 +9,6 @@ x-constants:
 
 services:
   postgres:
-    container_name: postgres
     image: postgres:12
     # newer versions may cause `SCRAM authentication requires libpq version 10 or above` error on some systems, so upgrading it may be painful
     # see also: https://support.kaspersky.ru/15658
@@ -28,7 +27,6 @@ services:
       retries: 10
 
   keycloak:
-    container_name: keycloak
     image: quay.io/keycloak/keycloak:latest
     environment:
       DB_VENDOR: "postgres"
@@ -53,23 +51,6 @@ services:
       postgres:
         condition: service_healthy
 
-#  keycloak:
-#    build: .
-#    container_name: ck-theme_keycloak
-#    environment:
-#      DB_VENDOR: POSTGRES
-#      DB_ADDR: postgres
-#      DB_DATABASE: keycloak
-#      DB_USER: keycloak
-#      DB_SCHEMA: public
-#      DB_PASSWORD: password
-#      KEYCLOAK_USER: admin
-#      KEYCLOAK_PASSWORD: password
-#    ports:
-#      - 8080:8080
-#    depends_on:
-#      - postgres
-
   redis:
     image: 'bitnami/redis:latest'
     environment:
@@ -78,3 +59,11 @@ services:
       - "6370:6379"
     volumes:
       - ./docker-data-volumes/redis:/bitnami/redis/data
+
+  s3-storage:
+    image: zenko/cloudserver
+    command: yarn run mem_backend
+    ports:
+      - "50000:8000"
+    volumes:
+      - ./s3config.json:/usr/src/app/config.json

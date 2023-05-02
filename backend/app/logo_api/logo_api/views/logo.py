@@ -86,7 +86,7 @@ class ReGenerateImageView(LogoApiBaseView):
 
         logo = await Logo.get(rmm, req_data['logo_id'])
 
-        if logo.created_by is None or logo.created_by != self.request[USER_ID_REQUEST_KEY]:
+        if logo.created_by is not None and logo.created_by != self.request[USER_ID_REQUEST_KEY]:
             raise web.HTTPForbidden()
 
         logo.status = LogoProcessingStatus.in_progress
@@ -110,7 +110,6 @@ class ReGenerateImageView(LogoApiBaseView):
 
 class ImageView(LogoApiBaseView):
     async def post(self) -> web.StreamResponse:
-        # req_data = await self._load_post_request_schema_data(logo_schemas.BaseLogoInfoRequestSchema)
         req_data = logo_schemas.BaseLogoInfoRequestSchema().load({
             **self.request.match_info,
         })
@@ -125,6 +124,8 @@ class ImageView(LogoApiBaseView):
         LOGGER.info(file.name)
 
         s3_key = logo.s3_key
+        if logo.created_by is not None and logo.created_by != self.request[USER_ID_REQUEST_KEY]:
+            raise web.HTTPForbidden()
 
         async def _chunk_iter(chunk_size: int = 10 * 1024 * 1024) -> AsyncGenerator[bytes, None]:
             assert isinstance(file, BodyPartReader)
@@ -152,15 +153,6 @@ class ImageView(LogoApiBaseView):
         ) as client:
             await client.put_object(Bucket=s3_settings.BUCKET, Key=s3_key, Body=image_bytes)
 
-        # s3_settings: S3Settings = self.request.app['s3_settings']
-        # uploader = S3FromMultipartUploader(
-        #     s3_host=s3_settings.HOST,
-        #     s3_bucket=s3_settings.BUCKET,
-        #     secret_key=s3_settings.SECRET_KEY,
-        #     access_key_id=s3_settings.ACCESS_KEY_ID,
-        # )
-        # await uploader.begin_multipart_upload(_chunk_iter(), s3_key)
-
         return web.json_response({'ok': 'ok'})
 
 
@@ -177,7 +169,10 @@ class MockupsView(LogoApiBaseView):
         mockups_s3_keys = await mockups.main(logo.s3_key, self.request.app['image_provider'], self.request.app['tpe'])
         LOGGER.info(f'Got mockup keys: {mockups_s3_keys}')
 
-        return web.json_response(mockups_s3_keys)
+        s3_settings: S3Settings = self.request.app['s3_settings']
+        mockups_s3_links = [f'{s3_settings.HOST}/{s3_settings.BUCKET}/{key}' for key in mockups_s3_keys]
+
+        return web.json_response(mockups_s3_links)
 
 
 class LogoStatusView(LogoApiBaseView):

@@ -1,27 +1,18 @@
 import React from "react";
-import {useNavigate} from "react-router-dom";
-import {Button} from "react-bootstrap";
 
 import Header from "../../Header/Header";
 
 import './style.css';
 
-export const NotFound = () => {
-    const navigate = useNavigate();
 
+export const NotFound = () => {
     return (
         <div>
             <Header backUrl={'/'}/>
             <div className={'main-not-found-container'}>
                 <h1>Такой страницы нет</h1>
                 <p className="zoom-area">
-                    Проверьте URL или вернитесь&nbsp;
-                    <Button
-                        variant={'primary'}
-                        onClick={() => navigate('/')}
-                    >
-                        на главную
-                    </Button>
+                    Проверьте URL или вернитесь <a href={'/'}>на главную</a>
                 </p>
                 <section className="error-container">
                     <span>4</span>

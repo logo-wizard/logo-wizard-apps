@@ -55,13 +55,6 @@ const specializationOptions: { text: string, value: string }[] = [
     {text: 'Продукты', value: 'grocery store'},
     {text: 'Книжный магазин', value: 'book shop'},
     {text: 'Цветы', value: 'flower shop'},
-    // {text: 'Такси', value: 'taxi'},
-    // {text: 'Мероприятия', value: 'events'},
-    // {text: 'НеФутбол', value: 'football'},
-    // {text: 'Образование', value: 'education company'},
-    // {text: 'Автомобили', value: 'cars'},
-    // {text: 'Торговля', value: 'retail company'},
-    // {text: 'Домашние животные', value: 'pets'},
 ]
 
 

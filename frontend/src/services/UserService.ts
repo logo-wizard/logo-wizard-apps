@@ -7,14 +7,12 @@ const _keycloak = new Keycloak({
     url: process.env.REACT_APP_KC_URL,
     realm: "logo",
     clientId: "logo",
-    // "ssl-required": "external",
-    // "resource": "bookBox",
-    // "public-client": true,
-    // "confidential-port": 0
 });
 
 
 class UserService {
+    // Provides an interface to get user info
+
     static getLoginRedirectUri = () => window.location.protocol + '//' + window.location.host + '/profile';
 
     static getLogoutRedirectUri = () => window.location.protocol + '//' + window.location.host + '/';
@@ -27,7 +25,7 @@ class UserService {
         })
             .then((authenticated) => {
                 if (!authenticated) {
-                    console.log("user is not authenticated..!");
+                    console.log("User is not authenticated..!");
                 }
                 onAuthenticatedCallback();
             })

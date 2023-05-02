@@ -1,18 +1,20 @@
 import React, {useEffect, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
-import {Triangle} from "react-loader-spinner";
 import {Button} from "react-bootstrap";
 
 import Header from "../../Header/Header";
 import {Logo, MockupsResponse} from "../../../types/types";
 import LogoService from "../../../services/LogoService";
 import RenderOnOwner from "../../RenderOnOwner/RenderOnOwner";
+import {NotFound} from "../NotFoundPage/NotFoundPage";
+import TriangleLoader from "../../Loader/Loader";
 
 import './style.css';
-import {NotFound} from "../NotFoundPage/NotFoundPage";
 
 
 const LogoViewerPage = () => {
+    // Fetches and renders a logo with the id from the url and mockups, as well as some controls
+
     const [notFound, setNotFound] = useState<boolean>(false);
     const {logo_id} = useParams();
     const [logo, setLogo] = useState<Logo>();
@@ -79,7 +81,10 @@ const LogoViewerPage = () => {
             <div className={'image-container'}>
                 {loaded ? (
                     <>
-                        <img src={`${logo!.link}`} alt={'result'}/>
+                        <img src={`${logo!.link}`} alt={'result'} onError={({currentTarget}) => {
+                            const local_s3_link = currentTarget.src.replace('host.docker.internal', 'localhost');
+                            if (currentTarget.src !== local_s3_link) currentTarget.src = local_s3_link;
+                        }}/>
 
                         <div className={'buttons-wrapper'}>
                             <Button variant={'primary'} onClick={downloadImage}>
@@ -93,16 +98,6 @@ const LogoViewerPage = () => {
                                 <Button variant={'outline-danger'} onClick={handleDelete}>
                                     Удалить
                                 </Button>
-                                {/*<Button*/}
-                                {/*    // style={{marginLeft: "auto", marginRight: 10}}*/}
-                                {/*    variant="outline-danger"*/}
-                                {/*    onClick={() => {*/}
-                                {/*        openImage(thisLogo)*/}
-                                {/*    }}*/}
-                                {/*    disabled={thisLogo.status !== LogoStatus.ready}*/}
-                                {/*>*/}
-                                {/*    Удалить*/}
-                                {/*</Button>*/}
                             </RenderOnOwner>
                         </div>
                     </>
@@ -116,22 +111,18 @@ const LogoViewerPage = () => {
                         height: '100%',
                         margin: 'auto',
                     }}>
-                        <Triangle
-                            height="100"
-                            width="100"
-                            color="#007bff"
-                            ariaLabel="triangle-loading"
-                            wrapperStyle={{}}
-                            visible={true}
-                        />
+                        <TriangleLoader width={100} height={100}/>
                     </div>
                 )}
             </div>
             {mockupsLoaded ? (
                 <div className={'logo-mockups-container'}>
-                    {mockups!.map((mockupS3Key) => {
+                    {mockups!.map((mockupS3Link, index) => {
                         return (
-                            <img key={mockupS3Key} src={LogoService.getLinkByKey(mockupS3Key)} alt={'logo mockup'}/>
+                            <img key={index} src={mockupS3Link} alt={'logo mockup'} onError={({currentTarget}) => {
+                                const local_s3_link = currentTarget.src.replace('host.docker.internal', 'localhost');
+                                if (currentTarget.src !== local_s3_link) currentTarget.src = local_s3_link;
+                            }}/>
                         )
                     })}
                 </div>
@@ -145,14 +136,7 @@ const LogoViewerPage = () => {
                     height: '100%',
                     margin: 'auto',
                 }}>
-                    <Triangle
-                        height="100"
-                        width="100"
-                        color="#007bff"
-                        ariaLabel="triangle-loading"
-                        wrapperStyle={{}}
-                        visible={true}
-                    />
+                    <TriangleLoader width={100} height={100}/>
                 </div>
             )}
         </div>

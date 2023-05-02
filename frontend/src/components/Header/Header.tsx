@@ -20,7 +20,7 @@ const Header: FC<HeaderProps> = ({backUrl}) => {
             </div>
 
             <div className={'nav-title'}>
-                AI Logo
+                Logo Wizard
             </div>
 
             <div className={'profile-corner'}>
@@ -30,7 +30,7 @@ const Header: FC<HeaderProps> = ({backUrl}) => {
                             username={UserService.getUsername()}
                             email={UserService.getEmail()}
                             size={50}
-                            border={'#5584b8 2px solid'}
+                            border={'var(--darker-primary) 2px solid'}
                         />
                     </div>
                 </a>

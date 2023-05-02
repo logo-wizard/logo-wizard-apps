@@ -1,0 +1,7 @@
+- Start external-services
+- Connect to PG and execute pg.sql (TODO provision db automatically)
+- Get backend/.env file (TODO remove this step by making local dev work without real stand)
+- Import realm
+- Regenerate backend token and enter it in env settings
+- Create a user & set a password
+- Profit

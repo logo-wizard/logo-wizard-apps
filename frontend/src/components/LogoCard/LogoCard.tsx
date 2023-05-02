@@ -1,22 +1,22 @@
 import React, {FC, useEffect, useState} from "react";
 import {Badge, Card} from "react-bootstrap";
 import Button from "react-bootstrap/Button";
-import {Triangle} from "react-loader-spinner";
 import Skeleton from "react-loading-skeleton";
 import 'react-loading-skeleton/dist/skeleton.css';
 
 import {Logo, LogoStatus, UserInfo} from "../../types/types";
 import LogoService from "../../services/LogoService";
+import RenderOnOwner from "../RenderOnOwner/RenderOnOwner";
 
 import './style.css';
-import RenderOnOwner from "../RenderOnOwner/RenderOnOwner";
+import TriangleLoader from "../Loader/Loader";
 
 
 interface LogoCardProps {
     logo: Logo
-    doPoll: boolean
+    doPoll: boolean  // whether to poll the log when its status is not ready
     onDelete?: (logoId: string) => void;
-    withRegen: boolean;
+    withRegen: boolean;  // whether to allow regeneration
 }
 
 
@@ -45,7 +45,6 @@ const LogoCardSkeleton = () => {
                 <br/>
                 <Skeleton width={'100%'}/>
                 <br/>
-                {/*<div style={{position: 'absolute', bottom: 20}}></div>*/}
             </Card.Body>
         </Card>
     )
@@ -108,12 +107,20 @@ const LogoCard: FC<LogoCardProps> = ({logo, doPoll, onDelete}) => {
     const renderLogoImage = (logo: Logo) => {
         if (logo.status === LogoStatus.ready) {
             return (
-                <Card.Img variant="top" className={'logo-card-image'} src={logo.link!} style={{
-                    height: '100%',
-                    width: '100%',
-                    objectFit: 'cover',
-                    borderBottom: '1px solid rgba(0,0,0,.125)',
-                }}/>
+                <Card.Img
+                    variant="top"
+                    className={'logo-card-image'}
+                    src={logo.link!}
+                    onError={({currentTarget}) => {
+                        const local_s3_link = currentTarget.src.replace('host.docker.internal', 'localhost');
+                        if (currentTarget.src !== local_s3_link) currentTarget.src = local_s3_link;
+                    }}
+                    style={{
+                        height: '100%',
+                        width: '100%',
+                        objectFit: 'cover',
+                        borderBottom: '1px solid rgba(0,0,0,.125)',
+                    }}/>
             )
         } else if (logo.status === LogoStatus.in_progress) {
             return (
@@ -127,16 +134,7 @@ const LogoCard: FC<LogoCardProps> = ({logo, doPoll, onDelete}) => {
                     margin: 'auto',
                     borderBottom: '1px solid rgba(0,0,0,.125)',
                 }}>
-                    <Triangle
-                        height="100"
-                        width="100"
-                        // color="#1b2a4e"
-                        color="#007bff"
-                        ariaLabel="triangle-loading"
-                        wrapperStyle={{}}
-                        // wrapperClassName=""
-                        visible={true}
-                    />
+                    <TriangleLoader width={100} height={100}/>
                 </div>
             )
         } else if (logo.status === LogoStatus.failed) {
@@ -167,7 +165,6 @@ const LogoCard: FC<LogoCardProps> = ({logo, doPoll, onDelete}) => {
                             })
                             .catch(err => console.log(err))
                     }}
-                    // disabled={thisLogo.status === LogoStatus.in_progress}
                     className={'regen-icon' + (thisLogo.status === LogoStatus.in_progress ? ' processing' : '')}
                 >
                 </Button>
@@ -191,17 +188,7 @@ const LogoCard: FC<LogoCardProps> = ({logo, doPoll, onDelete}) => {
                     Автор: {userInfo === null ? (<Skeleton width={'30%'}/>) : userInfo.username}
                 </Card.Subtitle>
                 <div>
-                    <Card.Text style={{
-                        // height: 100,
-                        // maxHeight: 100,
-                        // WebkitBoxOrient: 'vertical',
-                        // display: 'block',
-                        // display: 'border-box',
-                        // overflow: 'hidden',
-                        // textOverflow: 'ellipsis',
-                        // WebkitLineClamp: 3,
-                        // textAlign: 'justify',
-                    }}>
+                    <Card.Text>
                         <Badge pill bg={thisLogo.is_public ? 'primary' : 'secondary'}>
                             {thisLogo.is_public ? 'Публичный' : 'Скрытый'}
                         </Badge>
@@ -227,7 +214,6 @@ const LogoCard: FC<LogoCardProps> = ({logo, doPoll, onDelete}) => {
                                         <Button
                                             variant="outline-danger"
                                             onClick={() => onDelete(thisLogo.id)}
-                                            // disabled={thisLogo.status !== LogoStatus.ready}
                                         >
                                             Удалить
                                         </Button>

@@ -1,9 +1,20 @@
 $theme-colors: (
         //"info": tomato,
         "danger": #ec0000,
-        "primary": #015ce3,
+        "primary": #22cead,
         "dark": #212529,
 );
+
+.btn-primary:focus {
+  color: #fff;
+  background-color: var(--bs-primary);
+  border-color: darken(#22cead, 20%);
+  box-shadow: 0 0 0 0.25rem rgba(22, 187, 120, 0.65);
+}
+
+.btn-primary, .btn-outline-primary:hover {
+  color: #fff !important;
+}
 
 //@import "~/bootstrap/scss/bootstrap";
 @import "../node_modules/bootstrap/scss/bootstrap";

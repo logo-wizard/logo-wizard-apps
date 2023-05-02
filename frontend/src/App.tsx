@@ -18,7 +18,12 @@ const App = () => {
                 <Route path='/' element={<GeneratePage/>}/>
                 <Route path='/loading' element={<LoadingPage/>}/>
                 <Route path='/view-logo/:logo_id' element={<LogoViewerPage/>}/>
-                <Route path='/edit-logo/:logo_id' element={<LogoEditorPage/>}/>
+
+                <Route path='/edit-logo/:logo_id' element={
+                    <PrivateRoute>
+                        <LogoEditorPage/>
+                    </PrivateRoute>
+                }/>
 
                 <Route path='/profile' element={
                     <PrivateRoute>

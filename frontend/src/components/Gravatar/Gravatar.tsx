@@ -24,6 +24,8 @@ const Gravatar: FC<GravatarProps> = (
         border,
     }
 ) => {
+    // Renders gravatar if the user with the passed email has one, a computed image with initials otherwise
+
     let url: string;
     let emailMd5: string;
 
@@ -40,8 +42,6 @@ const Gravatar: FC<GravatarProps> = (
     }
 
     const initials = (username !== undefined ? getInitials(username) : '');
-
-    // const c = useStyles({emailMd5, size, initials})
 
     return (
         <div style={{
