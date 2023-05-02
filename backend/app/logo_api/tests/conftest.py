@@ -1,11 +1,11 @@
 import asyncio
-import os
 import logging
 
 import aiobotocore.session
 import aiobotocore.client
 import aiohttp.test_utils
 import aioredis
+import asyncpg
 import pytest
 from logo_configs.logging_config import configure_logging
 
@@ -31,6 +31,17 @@ def first_user_id() -> str:
 
 
 @pytest.fixture
+def pg_settings() -> PostgresSettings:
+    return PostgresSettings(
+        HOST='localhost',
+        PORT=5433,
+        USERNAME='logo_pg_user',
+        PASSWORD='logo_pg_pass',
+        DB_NAME='logodb',
+    )
+
+
+@pytest.fixture
 def s3_settings() -> S3Settings:
     return S3Settings(
         HOST='http://localhost:50000',
@@ -53,7 +64,7 @@ def redis_misc_settings() -> RedisSettings:
 
 
 @pytest.fixture
-def app_settings(redis_misc_settings, s3_settings) -> ApiSettings:
+def app_settings(redis_misc_settings, s3_settings, pg_settings) -> ApiSettings:
     return ApiSettings(
         APP_ENV='tests',
         REDIS_ARQ=RedisSettings(
@@ -82,13 +93,7 @@ def app_settings(redis_misc_settings, s3_settings) -> ApiSettings:
             ADMIN_USERNAME='admin',
             ADMIN_PASSWORD='admin',
         ),
-        PG=PostgresSettings(
-            HOST='localhost',
-            PORT=5433,
-            USERNAME='logo_pg_user',
-            PASSWORD='logo_pg_pass',
-            DB_NAME='logodb',
-        ),
+        PG=pg_settings,
         COLORIZATION=ColorizationSettings(
             MOCK=True,
             MODEL_DIR='',
@@ -131,6 +136,34 @@ async def create_s3_bucket(s3_client: aiobotocore.client.AioBaseClient, bucket_n
         )
     )
     LOGGER.info(resp)
+
+
+@pytest.fixture(scope='session', autouse=True)
+async def prepare_pg_for_tests(pg_settings) -> None:
+    pg_pool = await asyncpg.create_pool(
+        min_size=10,
+        max_size=100,
+        loop=asyncio.get_running_loop(),
+        host='localhost',
+        port='5433',
+        user='logo_pg_user',
+        password='logo_pg_pass',
+        database='logodb',
+    )
+
+    stmt = '''
+    create table if not exists logo 
+    (
+        id varchar not null primary key,
+        created_by varchar,
+        is_public  boolean default true not null
+    );
+    '''
+
+    async with pg_pool.acquire() as conn:  # type: asyncpg.Connection
+        await conn.execute(stmt)
+
+    LOGGER.info('Created tables successfully')
 
 
 @pytest.fixture(autouse=True)
