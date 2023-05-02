@@ -1,4 +1,5 @@
 import React, {FC, useEffect, useState} from "react";
+
 import {Badge, Card} from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 import Skeleton from "react-loading-skeleton";
@@ -7,9 +8,9 @@ import 'react-loading-skeleton/dist/skeleton.css';
 import {Logo, LogoStatus, UserInfo} from "../../types/types";
 import LogoService from "../../services/LogoService";
 import RenderOnOwner from "../RenderOnOwner/RenderOnOwner";
+import TriangleLoader from "../Loader/Loader";
 
 import './style.css';
-import TriangleLoader from "../Loader/Loader";
 
 
 interface LogoCardProps {
@@ -51,7 +52,7 @@ const LogoCardSkeleton = () => {
 }
 
 
-const LogoCard: FC<LogoCardProps> = ({logo, doPoll, onDelete}) => {
+const LogoCard: FC<LogoCardProps> = ({logo, doPoll, onDelete, withRegen}) => {
     const openImage = (logo: Logo) => window.open(`/view-logo/${logo.id}`, '_blank');
 
     const [thisLogo, setThisLogo] = useState<Logo>(logo);
@@ -152,23 +153,25 @@ const LogoCard: FC<LogoCardProps> = ({logo, doPoll, onDelete}) => {
 
     return (
         <Card className={'logo-card'} key={thisLogo.id} style={{width: '18rem', height: 400}}>
-            <div
-                className={'regen-icon-wrapper'}
-            >
-                <Button
-                    variant="outline-dark"
-                    onClick={() => {
-                        if (thisLogo.status === LogoStatus.in_progress) return;
-                        LogoService.regenLogo(thisLogo.id)
-                            .then(res => {
-                                setThisLogo(res.data)
-                            })
-                            .catch(err => console.log(err))
-                    }}
-                    className={'regen-icon' + (thisLogo.status === LogoStatus.in_progress ? ' processing' : '')}
+            {withRegen && (
+                <div
+                    className={'regen-icon-wrapper'}
                 >
-                </Button>
-            </div>
+                    <Button
+                        variant="outline-dark"
+                        onClick={() => {
+                            if (thisLogo.status === LogoStatus.in_progress) return;
+                            LogoService.regenLogo(thisLogo.id)
+                                .then(res => {
+                                    setThisLogo(res.data)
+                                })
+                                .catch(err => console.log(err))
+                        }}
+                        className={'regen-icon' + (thisLogo.status === LogoStatus.in_progress ? ' processing' : '')}
+                    >
+                    </Button>
+                </div>
+            )}
             <div style={{height: 200, overflow: 'hidden'}}>
                 {renderLogoImage(thisLogo)}
             </div>
