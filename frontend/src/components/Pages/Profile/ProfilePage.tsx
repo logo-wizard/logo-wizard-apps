@@ -1,6 +1,7 @@
 import React, {FC, useEffect, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
-import {Button} from "react-bootstrap";
+
+import {Button, Toast} from "react-bootstrap";
 import Skeleton from "react-loading-skeleton";
 
 import UserService from "../../../services/UserService";
@@ -33,6 +34,8 @@ const ProfilePage: FC<ProfilePageProps> = ({other = false}) => {
 
     const [logoListLoaded, setLogoListLoaded] = useState<boolean>(false);
     const [logoList, setLogoList] = useState<Logo[]>([]);
+
+    const [showCopied, setShowCopied] = useState<boolean>(false);
 
     const resetLogos = () => {
         setLogoIdsListLoaded(false);
@@ -119,6 +122,28 @@ const ProfilePage: FC<ProfilePageProps> = ({other = false}) => {
         <div>
             <Header backUrl={'/'}/>
             <div className={'profile-header'}>
+                <Toast
+                    className={'toast-copied'}
+                    onClose={() => setShowCopied(false)}
+                    show={showCopied}
+                    delay={3000}
+                    autohide
+                >
+                    <Toast.Header>Ссылка скопирована в буфер обмена</Toast.Header>
+                </Toast>
+                {(userInfo || user_id) && (
+                    <div className={'link-icon-wrapper'}>
+                        <div className={'link-icon' + (!userInfoLoaded ? ' not-ready' : '')}
+                             onClick={() => {
+                                 const userId = user_id || userInfo?.id;
+                                 const url = new URL(window.location.toString());
+                                 const profileLink = `${url.protocol}//${url.host}/user/${userId}`;
+                                 navigator.clipboard.writeText(profileLink);
+                                 setShowCopied(true);
+                             }}
+                        ></div>
+                    </div>
+                )}
                 {userInfoLoaded ? (
                     <>
                         <Gravatar
