@@ -1,55 +1,25 @@
-.help-modal-text {
-    padding: 25px !important;
-    line-height: 1.5em;
-}
-
-.help-modal-text p {
-    margin-top: 15px;
-}
-
-.help-modal-text ul, .help-modal-text li {
-    list-style: initial;
-    margin: revert;
-    padding: revert;
-}
-
-.help-modal-text h1,
-.help-modal-text h2,
-.help-modal-text h3,
-.help-modal-text p.heading
-{
-    margin-top: 25px;
-}
-
-.help-modal-text p:first-child {
-    margin-top: 0;
-}
-
-.help-modal-text p.heading {
-    padding: 10px;
-    box-shadow: 0 2px 20px rgb(0 0 0 / 20%);
-}
-
-.help-modal-text p.heading,
-.help-modal-text b
-{
-    font-weight: bold;
-}
-
-.help-modal-text span.important {
-    color: var(--bs-primary);
-    text-decoration: underline;
-    font-weight: bold;
-}
+/* common */
 
 .editor-buttons-wrapper {
-    margin: 15px auto;
+    margin: 20px auto;
     width: 70%;
     display: flex;
     flex-direction: column;
     gap: 20px;
     align-items: center;
     justify-content: center;
+}
+
+.mg-bot-30 {
+    margin-bottom: 30px !important;
+}
+
+.mg-top-10 {
+    margin-top: 10px !important;
+}
+
+.mg-top-0 {
+    margin-top: 0 !important;
 }
 
 .editor-buttons-wrapper button {
@@ -89,7 +59,61 @@
 }
 
 .hidden {
-    visibility: hidden;
+    display: none !important;
+}
+
+/* help modal */
+
+.help-modal .modal-dialog {
+    --bs-modal-width: 900px;
+}
+
+@media (max-width: 940px) {
+    .help-modal .modal-dialog {
+        --bs-modal-width: 500px;
+    }
+}
+
+.help-modal-text {
+    padding: 25px !important;
+    line-height: 1.5em;
+}
+
+.help-modal-text p {
+    margin-top: 15px;
+}
+
+.help-modal-text ul, .help-modal-text li {
+    list-style: initial;
+    margin: revert;
+    padding: revert;
+}
+
+.help-modal-text h1,
+.help-modal-text h2,
+.help-modal-text h3,
+.help-modal-text p.heading {
+    margin-top: 25px;
+}
+
+.help-modal-text p:first-child {
+    margin-top: 0;
+}
+
+.help-modal-text p.heading {
+    padding: 10px;
+    box-shadow: 0 2px 20px rgb(0 0 0 / 20%);
+}
+
+.help-modal-text p.heading,
+.help-modal-text b {
+    font-weight: bold;
+}
+
+.help-modal-text span.important {
+    color: var(--bs-primary);
+    text-decoration: underline;
+    font-weight: bold;
 }
 
 /* basic editor integration */
@@ -115,7 +139,7 @@ ul {
     height: 20px;
 }
 
-.tui-colorpicker-clearfix li input{
+.tui-colorpicker-clearfix li input {
     width: 16px;
     height: 16px;
 }
@@ -140,8 +164,7 @@ span.tui-colorpicker-palette-preview {
 .tui-image-editor-button.preset.preset-7-5,
 .tui-image-editor-button.preset.preset-16-9,
 .tie-btn-delete,
-.tie-btn-deleteAll
-{
+.tie-btn-deleteAll {
     display: none !important;
 }
 
@@ -204,6 +227,15 @@ input[type='range']::-webkit-slider-thumb {
     height: auto;
 }
 
+.editor-styler-options-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    align-items: center;
+    padding: 20px;
+}
+
 /* loader */
 
 .loader-with-backdrop {
@@ -232,16 +264,12 @@ input[type='range']::-webkit-slider-thumb {
     top: 20%;
 }
 
-.styler-options {
-    margin-top: 20px;
-}
-
 /* tabs */
 
 .tabs {
     width: 80%;
     height: auto;
-    margin: 10px auto 20px;
+    margin: 20px auto 20px;
 }
 
 

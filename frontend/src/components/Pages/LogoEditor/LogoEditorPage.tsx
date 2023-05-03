@@ -957,7 +957,7 @@ const LogoEditorPage = () => {
             </div>
 
             <div className={'editor-container' + (activeTab === 'text-tab' ? '' : ' hidden')}>
-                <div className={'editor-buttons-wrapper'}>
+                <div className={'editor-buttons-wrapper mg-top-0'}>
                     <Form>
                         <Form.Range
                             value={textToolWidth}
@@ -1051,7 +1051,7 @@ const LogoEditorPage = () => {
                         }}
                     />
                 </div>
-                <div className={'editor-buttons-wrapper'}>
+                <div className={'editor-buttons-wrapper mg-bot-30'}>
                     <Button variant={'primary'} disabled={processingRequest} onClick={() => detectText()}>
                         Распознать текст
                     </Button>
@@ -1077,22 +1077,21 @@ const LogoEditorPage = () => {
                         height={COLOR_IMG_CANVAS_H}
                     />
                 </div>
-                <FormGroup className={'form-container styler-options'}>
-                    <div className={'options-container'}>
+                <FormGroup className={'form-container styler-options mg-top-10'}>
+                    <div className={'editor-styler-options-container'}>
                         {styleOptions.map((option, index) => (
-                            <React.Fragment key={index}>
-                                <StyleOption
-                                    currentStyle={currentStyle}
-                                    text={option.text}
-                                    value={option.value}
-                                    onChange={setCurrentStyle}
-                                    disabled={processingRequest}
-                                />
-                            </React.Fragment>
+                            <StyleOption
+                                key={index}
+                                currentStyle={currentStyle}
+                                text={option.text}
+                                value={option.value}
+                                onChange={setCurrentStyle}
+                                disabled={processingRequest}
+                            />
                         ))}
                     </div>
                 </FormGroup>
-                <div className={'editor-buttons-wrapper'}>
+                <div className={'editor-buttons-wrapper mg-bot-30 mg-top-10'}>
                     <Button variant={'primary'} disabled={processingRequest || currentStyle === ''}
                             onClick={() => stylizeImage()}>
                         Стилизовать
@@ -1107,7 +1106,7 @@ const LogoEditorPage = () => {
                 </div>
             </div>
 
-            <div className={'editor-buttons-wrapper' + (activeTab === 'base-editor-tab' ? '' : ' hidden')}>
+            <div className={'editor-buttons-wrapper mg-bot-30' + (activeTab === 'base-editor-tab' ? '' : ' hidden')}>
                 <Form.Select
                     className={'form-select font-selector'}
                     value={TUI_selectedFont}
@@ -1133,6 +1132,7 @@ const LogoEditorPage = () => {
                 show={showHelpModal}
                 onHide={() => setShowHelpModal(false)}
                 keyboard={true}
+                className={'help-modal'}
             >
                 <Modal.Header closeButton>
                     <Modal.Title>Редактор</Modal.Title>

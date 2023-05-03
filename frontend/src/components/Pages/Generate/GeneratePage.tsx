@@ -14,8 +14,7 @@ import UserService from "../../../services/UserService";
 const GeneratePage = () => {
     const [logoList, setLogoList] = useState<Logo[]>(is_dev() ? mockLogoList : []);
     const [modal, setModal] = useState<boolean>(false);
-    const [polling, setPolling] = useState<boolean>(false);
-    const [activeItem, setActiveItem] = useState<LogoDraft>({
+    const [activeLogo, setActiveLogo] = useState<LogoDraft>({
         title: "",
         is_public: true,
         objects: [],
@@ -61,7 +60,7 @@ const GeneratePage = () => {
             style: '',
             status: LogoStatus.in_progress
         };
-        setActiveItem(item);
+        setActiveLogo(item);
         setModal(!modal);
     }
 
@@ -73,23 +72,10 @@ const GeneratePage = () => {
                     <div className={'d-flex justify-content-center m-5'}>
                         <Button
                             onClick={createItem}
-                            disabled={polling}
                             variant={'primary'}
                             size={'lg'}
-                            className={`ld-ext-right ${polling ? 'running' : ''}`}
                         >
-                            {polling ? (
-                                    <span>
-                                        Создаем логотип&nbsp;&nbsp;
-                                        <div
-                                            className={'ld ld-ring ld-spin btn-ld-override'}
-                                            style={{verticalAlign: 'middle', display: 'inline-block', margin: 'auto'}}
-                                        ></div>
-                                    </span>
-                                ) : (
-                                    <span>Создать логотип</span>
-                                )
-                            }
+                            <span>Создать логотип</span>
                         </Button>
                     </div>
 
@@ -103,7 +89,7 @@ const GeneratePage = () => {
             </div>
             {modal ? (
                 <LogoCreateModal
-                    activeItem={activeItem}
+                    activeItem={activeLogo}
                     toggle={toggle}
                     onSave={handleSubmit}
                 />

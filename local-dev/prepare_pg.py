@@ -26,6 +26,7 @@ async def create_tables() -> None:
         id varchar not null primary key,
         created_by varchar,
         is_public  boolean default true not null
+        created_at timestamp default now()
     );
     '''
 
