@@ -1,7 +1,7 @@
 import asyncio
 import base64
 import logging
-from typing import Optional, Any
+from typing import Optional
 
 import aioredis
 import cv2

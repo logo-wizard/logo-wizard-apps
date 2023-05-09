@@ -47,12 +47,18 @@ This allows one to run backend apps without bothering about python dependencies 
 
 # Running tests
 
-The tests are currently present only for backend apps.
+## Backend
 
 To run tests, follow these steps:
 - go to the app folder (`backend/app/<app_name>`)
 - run `docker-compose -f docker-compose.tests.yaml up` to start required external services
 - all the tests are written using `pytest` and are located inside the `tests` folder, so run `pytest` from the terminal (e.g. `pytest --log-cli-level=INFO tests`) on via the IDE
+
+## Frontend
+
+Install dependencies with `yarn install` or `yarn install --frozen-lockfile`.
+
+Run `yarn test` inside the `frontend` directory to run all tests.
 
 # Dockerfiles
 

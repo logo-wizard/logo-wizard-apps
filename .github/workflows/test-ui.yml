@@ -1,0 +1,35 @@
+name: Test UI
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - frontend/**
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - frontend/**
+  workflow_dispatch:
+    branches: [ "main" ]
+
+jobs:
+  test-api:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Use Node.js 19
+        uses: actions/setup-node@v3
+        with:
+          node-version: 19
+          cache: yarn
+
+      - name: Install Dependencies & Run Tests
+        run: |
+          yarn install --frozen-lockfile
+          yarn test
