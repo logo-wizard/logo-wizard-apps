@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
 from logo_api.base_settings import LogoSettingsCommon
@@ -8,7 +10,9 @@ class StableDiffusionSettings(BaseModel):
 
     USE_DIFFUSERS: bool
     BASE_MODEL_PATH: str
-    REPO: str
+    REPO: Optional[str]
+    STEPS: int
+    NEG_PROMPT: str
     HF_TOKEN: str
 
     OUTDIR: str
@@ -53,7 +57,12 @@ class WorkerSettings(LogoSettingsCommon):
         MOCK=False,
         USE_DIFFUSERS=True,
         BASE_MODEL_PATH='stabilityai/stable-diffusion-2',
-        REPO='',
+        STEPS=30,
+        REPO=None,
+        NEG_PROMPT=(
+            'low quality, worst quality, bad composition, extra digit,'
+            ' fewer digits, text, inscription, watermark, label, asymmetric, shifted'
+        ),
         HF_TOKEN='',
         OUTDIR='/outputs',
         SKIP_GRID=True,

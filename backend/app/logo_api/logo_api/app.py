@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 from concurrent.futures import ThreadPoolExecutor
+from typing import Type
 
 import aioredis
 import asyncpg
@@ -11,7 +12,6 @@ from arq import create_pool
 from arq.connections import RedisSettings
 from timm.models import create_model
 
-from logo_api.utils.s3_utils import download_colorization_model_weights_from_s3
 from logo_configs.logging_config import configure_logging
 
 import logo_api.views.colorization as colorization_views
@@ -28,8 +28,10 @@ from logo_api.middlewares.keycloak_user_id import keycloak_user_id_middleware
 from logo_api.enums import HandlerResource
 from logo_api.middlewares.keycloak_admin_client import keycloak_admin_client_middleware
 from logo_api.services.handler_resource_map import HandlerResourceManager
+from logo_api.services.translator_client import YCTranslateClient, YCTranslateClientMock
+from logo_api.utils.s3_utils import download_colorization_model_weights_from_s3
+from logo_api.utils.image_provider import S3ImageProvider
 from logo_api.views.utils.colorization.modeling import *
-from logo_api.views.utils.mockups import S3ImageProvider
 
 
 LOGGER = logging.getLogger(__name__)
@@ -57,6 +59,23 @@ def get_colorization_model(model_path='/models/icolorit_small_4ch_patch16_224.pt
 def init_hook(settings: ApiSettings):
 
     async def actual_init_hook(target_app: web.Application) -> None:
+        """
+        - initializes translate client
+        - creates pg & redis pools
+        - creates other needed services/objects: TPE, image provider, etc.
+        - initializes colorization model
+        """
+
+        yc_translate_client_svc_cls: Type[YCTranslateClient] = {
+            False: YCTranslateClient,
+            True: YCTranslateClientMock,
+        }[settings.TRANSLATE.MOCK]
+
+        yc_translate_client_svc_cls(
+            raise_for_status=False,  # type: ignore
+            api_key=settings.TRANSLATE.API_KEY,  # type: ignore
+        ).bind_to_app(target_app)
+
         target_app['arq_redis_pool'] = await create_pool(RedisSettings(
             host=settings.REDIS_ARQ.HOST,
             port=settings.REDIS_ARQ.PORT,

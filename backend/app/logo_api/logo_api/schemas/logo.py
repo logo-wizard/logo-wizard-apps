@@ -44,7 +44,6 @@ class LogoInfoBatchRequestSchema(BaseRequestSchema):
 class LogoInfoResponseSchema(BaseRequestSchema):
     id = ma.fields.String(required=True)
     created_by = ma.fields.String(allow_none=True)
-    # created_at = ma.fields.DateTime()
     is_public = ma.fields.Boolean()
     title = ma.fields.String(required=True)
     status = ma.fields.Enum(enum=LogoProcessingStatus, required=True)

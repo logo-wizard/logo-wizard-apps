@@ -13,19 +13,21 @@ async def insert_logo(conn: asyncpg.Connection, logo: Logo) -> None:
     await conn.execute(f'''
     INSERT INTO
         logo (id, created_by, is_public)
-        VALUES ('{logo.id}', '{logo.created_by}', {logo.is_public})
-    ''')
+        VALUES ($1, $2, $3)
+    ''', logo.id, logo.created_by, logo.is_public)
 
 
 async def get_logo_ids_by_user(conn: asyncpg.Connection, created_by: str, public: Optional[bool]) -> list[str]:
-    stmt = f'''SELECT id FROM logo WHERE created_by = '{created_by}' '''
+    raw_stmt = '''SELECT id FROM logo WHERE created_by = $1 '''
     if public is not None:
-        stmt += f''' and is_public = {public} '''
-    stmt += ' ORDER BY created_at desc'
-    records = await conn.fetch(stmt)
+        raw_stmt += f''' and is_public = {public} '''
+    raw_stmt += ' ORDER BY created_at desc'
+
+    prep_stmt = await conn.prepare(raw_stmt)
+    records = await prep_stmt.fetch(created_by)
     return [record[0] for record in records]
 
 
 async def delete_logo(conn: asyncpg.Connection, logo_id: str) -> None:
-    stmt = f'''DELETE FROM logo WHERE id = '{logo_id}' '''
-    await conn.execute(stmt)
+    stmt = '''DELETE FROM logo WHERE id = $1 '''
+    await conn.execute(stmt, logo_id)

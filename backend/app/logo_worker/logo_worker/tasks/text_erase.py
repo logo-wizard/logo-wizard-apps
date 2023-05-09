@@ -11,17 +11,12 @@ from logo_worker_interface.task_params import EraseTextTaskParams
 from logo_api.enums import LogoProcessingStatus
 from logo_api.models.models import TextErasureTask
 from logo_api.redis_model import RedisModelManager
+from logo_api.utils.image_utils import image_to_png_data_url
 
 from logo_worker.context import GLOBAL_WORKER_CTX
 
 
 LOGGER = logging.getLogger(__name__)
-
-
-def image_to_png_data_url(img: np.ndarray) -> str:
-    _, buffer = cv2.imencode('.png', img)
-    data_url = 'data:image/png;base64,' + base64.b64encode(buffer).decode('utf-8')
-    return data_url
 
 
 def actual_blocking_eraser(img_data_url: str, mask_data_url: str) -> str:
@@ -32,8 +27,6 @@ def actual_blocking_eraser(img_data_url: str, mask_data_url: str) -> str:
     mask_string = mask_data_url.split(',')[1]
     nparr = np.frombuffer(base64.b64decode(mask_string), np.uint8)
     mask = cv2.imdecode(nparr, cv2.IMREAD_GRAYSCALE)
-    LOGGER.info(f'Size {mask.shape}')
-    cv2.imwrite('/models/got_mask.png', mask)
 
     eraser = GLOBAL_WORKER_CTX.text_eraser
     result_bgr = eraser(image, mask)

@@ -1,11 +1,11 @@
 import base64
 import logging
 from http import HTTPStatus
-from typing import Any, AsyncGenerator
+from typing import Any
 
 import asyncpg
 from aiobotocore.session import get_session
-from aiohttp import web, BodyPartReader
+from aiohttp import web
 from arq import ArqRedis
 
 from logo_worker_interface.task_params import GenerateImageTaskParams
@@ -13,9 +13,9 @@ from logo_worker_interface.task_params import GenerateImageTaskParams
 import logo_api.schemas.logo as logo_schemas
 from logo_api.enums import LogoProcessingStatus
 from logo_api.models import Logo
-from logo_api.redis_model import RedisModelManager, RedisModelNotFound
+from logo_api.redis_model import RedisModelManager, RedisRecordNotFound
 from logo_api.services.pg import insert_logo, get_logo_ids_by_user, delete_logo
-from logo_api.services.user_id import USER_ID_REQUEST_KEY
+from logo_api.services.translator_client import YCTranslateClient, LanguageCode
 from logo_api.views.base import LogoApiBaseView
 
 from logo_api.views.utils import mockups
@@ -26,21 +26,40 @@ LOGGER = logging.getLogger(__name__)
 
 
 class GenerateImageView(LogoApiBaseView):
+    """
+    Creates a Logo by composing a prompt from the settings provided by the user and creates a task for the worker
+    """
+
     async def post(self) -> web.StreamResponse:
         req_data = await self._load_post_request_schema_data(logo_schemas.GenerateImageRequestSchema)
 
         specializations_str = ', '.join(req_data['specialization'])
-        objects = req_data['objects']
-        objects_str = ('with ' + ', '.join(objects)) if objects else None
+
+        objects_raw: list[str] = req_data['objects']
+        objects_en = objects_raw
+        if objects_raw:
+            translate_client = YCTranslateClient.get_for_app(self.request.app)
+            objects_en = await translate_client.translate(
+                texts=objects_raw,
+                target_language=LanguageCode.en,
+            )
+        objects_str = None
+        if objects_en:
+            objects_str = 'with ' + objects_en[0]
+            if len(objects_en) > 2:
+                objects_str += ', '
+            if len(objects_en) > 1:
+                objects_str += (', '.join(objects_en[1:-1]) + ' and ' + objects_en[-1])
+
         prompt = 'A logo of ' + ', '.join((s for s in (
             specializations_str,
             objects_str,
             req_data['palette'],
             req_data['style'],
         ) if s))
-        prompt += ', vector, design, minimalism'
+        prompt += ', modern, minimalism, vector art, 2d, best quality, centered'
 
-        LOGGER.info(f'Creating logo as user {self.request[USER_ID_REQUEST_KEY]}')
+        LOGGER.info(f'Creating logo as user {self.request[self.USER_ID_REQUEST_KEY]}')
 
         rmm = RedisModelManager(redis=self.get_redis())
         logo = Logo(
@@ -52,7 +71,7 @@ class GenerateImageView(LogoApiBaseView):
             style=req_data['style'],
             objects=req_data['objects'],
             status=LogoProcessingStatus.in_progress,
-            created_by=self.request[USER_ID_REQUEST_KEY],
+            created_by=self.request[self.USER_ID_REQUEST_KEY],
             is_public=req_data['is_public'],
         )
         await logo.save(ttl=None)
@@ -86,7 +105,7 @@ class ReGenerateImageView(LogoApiBaseView):
 
         logo = await Logo.get(rmm, req_data['logo_id'])
 
-        if logo.created_by is not None and logo.created_by != self.request[USER_ID_REQUEST_KEY]:
+        if logo.created_by is not None and logo.created_by != self.request[self.USER_ID_REQUEST_KEY]:
             raise web.HTTPForbidden()
 
         logo.status = LogoProcessingStatus.in_progress
@@ -109,6 +128,8 @@ class ReGenerateImageView(LogoApiBaseView):
 
 
 class ImageView(LogoApiBaseView):
+    """ Saves the provided image into the object storage by the key of the logo provided """
+
     async def post(self) -> web.StreamResponse:
         req_data = logo_schemas.BaseLogoInfoRequestSchema().load({
             **self.request.match_info,
@@ -117,30 +138,13 @@ class ImageView(LogoApiBaseView):
         rmm = RedisModelManager(redis=self.get_redis())
 
         logo = await Logo.get(rmm, req_data['logo_id'])
+        s3_key = logo.s3_key
+        if logo.created_by is not None and logo.created_by != self.request[self.USER_ID_REQUEST_KEY]:
+            raise web.HTTPForbidden()
 
         reader = await self.request.multipart()
         file = await reader.next()
-        LOGGER.info(type(file))
-        LOGGER.info(file.name)
-
-        s3_key = logo.s3_key
-        if logo.created_by is not None and logo.created_by != self.request[USER_ID_REQUEST_KEY]:
-            raise web.HTTPForbidden()
-
-        async def _chunk_iter(chunk_size: int = 10 * 1024 * 1024) -> AsyncGenerator[bytes, None]:
-            assert isinstance(file, BodyPartReader)
-            while True:
-                chunk = await file.read_chunk(size=chunk_size)
-                if chunk:
-                    LOGGER.debug(f'Received chunk of {len(chunk)} bytes.')
-                    yield chunk
-                else:
-                    LOGGER.info('Empty chunk received.')
-                    break
-
-        image_bytes = b''
-        async for chunk in _chunk_iter():
-            image_bytes += chunk
+        image_bytes = await self._read_part_bytes(file)
         image_bytes = base64.decodebytes(image_bytes.split(b',')[1])
 
         session = get_session()
@@ -151,22 +155,32 @@ class ImageView(LogoApiBaseView):
                 aws_secret_access_key=s3_settings.SECRET_KEY,
                 aws_access_key_id=s3_settings.ACCESS_KEY_ID,
         ) as client:
-            await client.put_object(Bucket=s3_settings.BUCKET, Key=s3_key, Body=image_bytes)
+            await client.put_object(Bucket=s3_settings.BUCKET, Key=s3_key, Body=image_bytes, ACL='public-read')
 
         return web.json_response({'ok': 'ok'})
 
 
 class MockupsView(LogoApiBaseView):
+    """ Creates mockups in the object storage for the logo with the provided id """
+
     async def get(self) -> web.StreamResponse:
         req_data = await self._load_post_request_schema_data(logo_schemas.BaseLogoInfoRequestSchema)
         rmm = RedisModelManager(redis=self.get_redis())
 
         logo = await Logo.get(rmm, req_data['logo_id'])
 
-        if not logo.is_public and logo.created_by is not None and logo.created_by != self.request[USER_ID_REQUEST_KEY]:
+        if (
+                not logo.is_public and
+                logo.created_by is not None and
+                logo.created_by != self.request[self.USER_ID_REQUEST_KEY]
+        ):
             raise web.HTTPForbidden()
 
-        mockups_s3_keys = await mockups.main(logo.s3_key, self.request.app['image_provider'], self.request.app['tpe'])
+        mockups_s3_keys = await mockups.create_mockups_for_image(
+            logo.s3_key,
+            self.request.app['image_provider'],
+            self.request.app['tpe'],
+        )
         LOGGER.info(f'Got mockup keys: {mockups_s3_keys}')
 
         s3_settings: S3Settings = self.request.app['s3_settings']
@@ -176,13 +190,19 @@ class MockupsView(LogoApiBaseView):
 
 
 class LogoStatusView(LogoApiBaseView):
+    """ Logo processing status """
+
     async def get(self) -> web.StreamResponse:
         req_data = await self._load_post_request_schema_data(logo_schemas.LogoStatusRequestSchema)
         rmm = RedisModelManager(redis=self.get_redis())
 
         logo = await Logo.get(rmm, req_data['logo_id'])
 
-        if not logo.is_public and logo.created_by is not None and logo.created_by != self.request[USER_ID_REQUEST_KEY]:
+        if (
+                not logo.is_public and
+                logo.created_by is not None and
+                logo.created_by != self.request[self.USER_ID_REQUEST_KEY]
+        ):
             raise web.HTTPForbidden()
 
         return web.json_response(
@@ -193,13 +213,19 @@ class LogoStatusView(LogoApiBaseView):
 
 
 class LogoInfoView(LogoApiBaseView):
+    """ Single logo resource """
+
     async def get(self) -> web.StreamResponse:
         req_data = await self._load_post_request_schema_data(logo_schemas.LogoInfoRequestSchema)
         rmm = RedisModelManager(redis=self.get_redis())
 
         logo = await Logo.get(rmm, req_data['logo_id'])
 
-        if not logo.is_public and logo.created_by is not None and logo.created_by != self.request[USER_ID_REQUEST_KEY]:
+        if (
+                not logo.is_public and
+                logo.created_by is not None and
+                logo.created_by != self.request[self.USER_ID_REQUEST_KEY]
+        ):
             raise web.HTTPForbidden()
 
         return web.json_response(
@@ -212,7 +238,7 @@ class LogoInfoView(LogoApiBaseView):
 
         logo = await Logo.get(rmm, req_data['logo_id'])
 
-        if logo.created_by is None or logo.created_by != self.request[USER_ID_REQUEST_KEY]:
+        if logo.created_by is None or logo.created_by != self.request[self.USER_ID_REQUEST_KEY]:
             raise web.HTTPForbidden()
 
         await logo.delete()
@@ -226,6 +252,8 @@ class LogoInfoView(LogoApiBaseView):
 
 
 class LogoInfoBatch(LogoInfoView):
+    """ Batch of logos """
+
     async def post(self) -> web.StreamResponse:
         req_data = await self._load_post_request_schema_data(logo_schemas.LogoInfoBatchRequestSchema)
         logos = req_data['logos']
@@ -237,10 +265,14 @@ class LogoInfoBatch(LogoInfoView):
         for logo in logos:
             try:
                 logo = await Logo.get(rmm, logo['logo_id'])
-            except RedisModelNotFound:
+            except RedisRecordNotFound:
                 continue
 
-            if not logo.is_public and logo.created_by is not None and logo.created_by != self.request[USER_ID_REQUEST_KEY]:
+            if (
+                    not logo.is_public and
+                    logo.created_by is not None and
+                    logo.created_by != self.request[self.USER_ID_REQUEST_KEY]
+            ):
                 continue
 
             logos_batch.append(self.dump_logo(logo))
@@ -258,8 +290,10 @@ class LogoListViewBase(LogoApiBaseView):
 
 
 class LogoMyListView(LogoListViewBase):
+    """ List of Logo IDs that are created by the authenticated user """
+
     async def get(self) -> web.StreamResponse:
-        user_id: str = self.request[USER_ID_REQUEST_KEY]
+        user_id: str = self.request[self.USER_ID_REQUEST_KEY]
 
         logo_ids = await self._get_logos_by_id(user_id, public_only=False)
 
@@ -273,6 +307,8 @@ class LogoMyListView(LogoListViewBase):
 
 
 class UserLogoListView(LogoListViewBase):
+    """ List of Logo IDs that are created by the user with the provided user_id """
+
     async def get(self) -> web.StreamResponse:
         req_data = await self._load_post_request_schema_data(logo_schemas.UserLogoRequestSchema)
         request_user_id: str = req_data['user_id']

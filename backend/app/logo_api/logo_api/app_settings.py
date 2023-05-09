@@ -1,5 +1,11 @@
 from logo_api.base_settings import LogoSettingsCommon
-from logo_configs.settings_submodels import CORSSettings, KeycloakSettings, PostgresSettings, ColorizationSettings
+from logo_configs.settings_submodels import (
+    CORSSettings,
+    KeycloakSettings,
+    PostgresSettings,
+    ColorizationSettings,
+    TranslateSettings,
+)
 
 
 class ApiSettings(LogoSettingsCommon):
@@ -36,6 +42,11 @@ class ApiSettings(LogoSettingsCommon):
         MOCK=False,
         MODEL_DIR='',
         MODEL_FILENAME='',
+    )
+
+    TRANSLATE: TranslateSettings = TranslateSettings(
+        MOCK=True,
+        API_KEY='dummy_api_key',
     )
 
     class Config(LogoSettingsCommon.Config):

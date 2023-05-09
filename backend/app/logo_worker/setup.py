@@ -2,7 +2,7 @@ import os
 from setuptools import setup, find_packages
 
 
-__version__ = "0.22.0"
+__version__ = "0.23.0"
 
 
 PKG_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -76,6 +76,7 @@ setup(
     extras_require={
         "develop": [
             "pytest",
+            "pytest-asyncio",
         ],
         "mypy": [
             "mypy",

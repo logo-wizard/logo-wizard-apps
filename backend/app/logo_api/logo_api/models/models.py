@@ -1,4 +1,3 @@
-import datetime
 from typing import ClassVar, Optional
 
 import attr
@@ -19,7 +18,6 @@ class Logo(RedisModel):
     is_public: bool = attr.ib(default=True)
 
     created_by: Optional[str] = attr.ib(default=None)
-    # created_at: datetime.datetime = attr.ib()
     status: LogoProcessingStatus = attr.ib()
     prompt: Optional[str] = attr.ib(default=None)
     s3_key: Optional[str] = attr.ib(default=None)
@@ -31,7 +29,7 @@ class Logo(RedisModel):
 @attr.s(init=True, kw_only=True)
 class TextDetectionTask(RedisModel):
     KEY_PREFIX: ClassVar[str] = 'text_detect'
-    DEFAULT_TTL = 6 * 3600
+    DEFAULT_TTL_SEC = 6 * 3600
 
     img_data_url: str = attr.ib()
     status: LogoProcessingStatus = attr.ib()

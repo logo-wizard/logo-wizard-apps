@@ -1,27 +1,23 @@
 from __future__ import annotations
 
 import functools
-from typing import ClassVar, Type, Optional
+from typing import Type, Optional
 
 import attr
 from aiohttp import web
 from aiohttp.typedefs import Handler
 
 from logo_api.enums import HandlerResource
+from logo_api.services.base import APIService
 
 
 @attr.s
-class HandlerResourceManager:
-    _APP_CTX_KEY: ClassVar[str] = '_HANDLER_RESOURCE_MAP_'
+class HandlerResourceManager(APIService['HandlerResourceManager']):
+    """ Allows storing feature flags for different handlers and check their presence for a particular handler """
+
+    APP_CTX_KEY = '__HANDLER_RESOURCE_MAP__'
 
     _handler_resource_map: dict[Type[web.View], frozenset[HandlerResource]] = attr.ib()
-
-    def bind_to_app(self, app: web.Application) -> None:
-        app[self._APP_CTX_KEY] = self
-
-    @classmethod
-    def get_for_app(cls, app) -> HandlerResourceManager:
-        return app[cls._APP_CTX_KEY]
 
     def has_resource(self, handler: Handler, resource: HandlerResource) -> bool:
         actual_handler_cls: Optional[Type[web.View]] = (

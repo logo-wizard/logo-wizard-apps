@@ -2,25 +2,17 @@ import asyncio
 import base64
 import json
 import logging
-from typing import AsyncGenerator
 
 import cv2
 import numpy as np
-from aiohttp import web, BodyPartReader
-
+from aiohttp import web
 
 from logo_api.views.base import LogoApiBaseView
-
 from logo_api.views.utils.colorization.colorization import Colorization, ColorizationMock
+from logo_api.utils.image_utils import image_to_png_data_url
 
 
 LOGGER = logging.getLogger(__name__)
-
-
-def image_to_png_data_url(img: np.ndarray) -> str:
-    _, buffer = cv2.imencode('.png', img)
-    data_url = 'data:image/png;base64,' + base64.b64encode(buffer).decode('utf-8')
-    return data_url
 
 
 def colorize(
@@ -50,26 +42,12 @@ def colorize(
 class ColorizationView(LogoApiBaseView):
     async def post(self) -> web.StreamResponse:
         reader = await self.request.multipart()
-        file = await reader.next()
 
-        async def _chunk_iter(chunk_size: int = 10 * 1024 * 1024) -> AsyncGenerator[bytes, None]:
-            assert isinstance(file, BodyPartReader)
-            while True:
-                chunk = await file.read_chunk(size=chunk_size)
-                if chunk:
-                    LOGGER.debug(f'Received chunk of {len(chunk)} bytes.')
-                    yield chunk
-                else:
-                    LOGGER.info('Empty chunk received.')
-                    break
-
-        image_bytes = b''
-        async for chunk in _chunk_iter():
-            image_bytes += chunk
+        file_reader = await reader.next()
+        image_bytes = await self._read_part_bytes(file_reader)
         image_bytes = base64.decodebytes(image_bytes.split(b',')[1])
         nparr = np.fromstring(image_bytes, np.uint8)
         image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        # image = cv2.resize(iamge, (720, 720), interpolation=cv2.INTER_CUBIC)
 
         def _map_range(n: float, prev_max: float, new_max: float) -> float:
             return n / prev_max * new_max
@@ -78,25 +56,23 @@ class ColorizationView(LogoApiBaseView):
         points_str = await points_reader.read(decode=True)
         points = json.loads(points_str)
 
-        points_image = points['pointsImage']
         points_image = [
             (
                 int(_map_range(float(p['x']), 512, 512)),
                 int(_map_range(float(p['y']), 512, 512))
-            ) for p in points_image
+            ) for p in points['pointsImage']
         ]
 
-        points_gamut = points['pointsGamut']
         points_gamut = [
             (
                 int(_map_range(float(p['x']), 128, 224)),
                 int(_map_range(float(p['y']), 128, 224))
-            ) for p in points_gamut
+            ) for p in points['pointsGamut']
         ]
 
         color_model = self.request.app['__COLORIZATION_MODEL__']
         if color_model is None:
-            LOGGER.info('Got not colorization model, apparently it is mocked')
+            LOGGER.info('Got not colorization model, assuming it is mocked')
             colorization = ColorizationMock(model=color_model, load_size=224, win_size=512, device='cpu')
         else:
             colorization = Colorization(model=color_model, load_size=224, win_size=512, device='cpu')

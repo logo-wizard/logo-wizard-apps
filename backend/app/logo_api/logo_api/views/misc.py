@@ -2,7 +2,6 @@ import logging
 
 from aiohttp import web
 
-from logo_api.services.user_id import USER_ID_REQUEST_KEY
 from logo_api.views.base import LogoApiBaseView
 
 
@@ -13,5 +12,5 @@ class PingView(LogoApiBaseView):
     async def get(self) -> web.StreamResponse:
         return web.json_response({
             'result': 'pong',
-            'created_by': self.request[USER_ID_REQUEST_KEY],
+            'created_by': self.request[self.USER_ID_REQUEST_KEY],
         })

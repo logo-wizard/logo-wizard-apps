@@ -7,13 +7,22 @@ import aiohttp.test_utils
 import aioredis
 import asyncpg
 import pytest
+from aiohttp import web
+
 from logo_configs.logging_config import configure_logging
 
 from logo_api.enums import LogoProcessingStatus
 from logo_api.models import Logo
 from logo_api.redis_model import RedisModelManager
-from logo_configs.settings_submodels import RedisSettings, S3Settings, CORSSettings, KeycloakSettings, PostgresSettings, \
-    ColorizationSettings
+from logo_configs.settings_submodels import (
+    RedisSettings,
+    S3Settings,
+    CORSSettings,
+    KeycloakSettings,
+    PostgresSettings,
+    ColorizationSettings,
+    TranslateSettings,
+)
 
 import logo_api.app
 from logo_api.app_settings import ApiSettings
@@ -23,6 +32,11 @@ pytest_plugins = 'aiohttp.pytest_plugin'
 
 
 LOGGER = logging.getLogger(__name__)
+
+
+@pytest.fixture
+def sample_image_data_url() -> str:
+    return 'data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=='
 
 
 @pytest.fixture
@@ -98,14 +112,23 @@ def app_settings(redis_misc_settings, s3_settings, pg_settings) -> ApiSettings:
             MOCK=True,
             MODEL_DIR='',
             MODEL_FILENAME='',
-        )
+        ),
+        TRANSLATE=TranslateSettings(
+            MOCK=True,
+            API_KEY='dummy_test_api_key',
+        ),
     )
 
 
 @pytest.fixture
-def client(aiohttp_client, app_settings) -> aiohttp.test_utils.TestClient:
+def app(app_settings) -> web.Application:
     app = logo_api.app.create_app(app_settings)
     configure_logging(app_name='logo_api')
+    return app
+
+
+@pytest.fixture
+def client(aiohttp_client, app) -> aiohttp.test_utils.TestClient:
     loop = asyncio.get_event_loop()
     return loop.run_until_complete(aiohttp_client(app))
 

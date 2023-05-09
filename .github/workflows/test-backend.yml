@@ -44,3 +44,37 @@ jobs:
         run: |
           cd ./backend/app/logo_api
           pytest --log-cli-level=INFO tests
+
+  test-worker:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Set Up External Services for Tests in Docker Compose
+        uses: isbang/compose-action@v1.4.1
+        with:
+          compose-file: "./backend/app/logo_worker/docker-compose.tests.yaml"
+
+      - name: Install Dependencies
+        run: |
+          docker ps -a
+          cd ./backend/app/logo_worker
+          pip install --upgrade pip
+          pip install -Ue ".[develop]"
+          pip install "openmim>=0.3.7"
+          mim install mmocr
+
+      - name: Run Tests
+        run: |
+          cd ./backend/app/logo_worker
+          pytest --log-cli-level=INFO tests

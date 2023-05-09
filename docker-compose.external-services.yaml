@@ -40,7 +40,6 @@ services:
       KC_DB_USERNAME: *c-pg-user
       KC_DB_PASSWORD: *c-pg-pass
       KC_HOSTNAME: localhost
-#      KC_HTTP_RELATIVE_PATH: "/auth"
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
     ports:
@@ -66,4 +65,4 @@ services:
     ports:
       - "50000:8000"
     volumes:
-      - ./s3config.json:/usr/src/app/config.json
+      - ./s3config.json:/usr/src/app/config.json  # adds a host.docker.internal server

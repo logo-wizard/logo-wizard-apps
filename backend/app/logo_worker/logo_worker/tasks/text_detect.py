@@ -11,6 +11,7 @@ from logo_worker_interface.task_params import DetectTextTaskParams
 from logo_api.enums import LogoProcessingStatus
 from logo_api.models.models import TextDetectionTask
 from logo_api.redis_model import RedisModelManager
+from logo_api.utils.image_utils import image_to_png_data_url
 
 from logo_worker.context import GLOBAL_WORKER_CTX
 
@@ -18,22 +19,13 @@ from logo_worker.context import GLOBAL_WORKER_CTX
 LOGGER = logging.getLogger(__name__)
 
 
-def image_to_png_data_url(img: np.ndarray) -> str:
-    _, buffer = cv2.imencode('.png', img)
-    data_url = 'data:image/png;base64,' + base64.b64encode(buffer).decode('utf-8')
-    return data_url
-
-
 def actual_blocking_detector(img_data_url: str) -> str:
     image_string = img_data_url.split(',')[1]
-    LOGGER.info(f'Image string {len(image_string)}')
     nparr = np.frombuffer(base64.b64decode(image_string), np.uint8)
     image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    LOGGER.info(f'Image arr {len(image)}')
 
     detector = GLOBAL_WORKER_CTX.text_detector
     mask = detector(image)
-    cv2.imwrite('/models/text_mask.png', mask)
 
     mask_data_url = image_to_png_data_url(mask)
 

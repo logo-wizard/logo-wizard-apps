@@ -46,7 +46,7 @@ const StyleOption: FC<StyleOptionProps> = ({currentStyle, text, value, onChange,
 
 const styleOptions: { text: string, value: string }[] = [
     {text: 'Минималистичный дизайн', value: 'minimalistic style'},
-    {text: 'Рисунок карандашом', value: 'pencil drawing'},
+    {text: 'Скетч', value: 'contour, hand drawn, sketch style'},
     {text: 'Неон', value: 'neon style'},
     {text: 'Pixel art', value: 'pixel art'},
     {text: 'Абстракция', value: 'abstract'},

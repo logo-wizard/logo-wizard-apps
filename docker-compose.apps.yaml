@@ -46,6 +46,8 @@ services:
       KEYCLOAK__CLIENT_PUBLIC_KEY: ''
       KEYCLOAK__ADMIN_USERNAME: 'admin'
       KEYCLOAK__ADMIN_PASSWORD: 'admin'
+      TRANSLATE__MOCK: 1
+      TRANSLATE__API_KEY: 'dummy'
     build: ./backend/app/logo_api
     ports:
       - "8080:8000"
@@ -72,6 +74,8 @@ services:
       SD__USE_DIFFUSERS: 1
       SD__BASE_MODEL_PATH: ''
       SD__REPO: ''
+      SD__NEG_PROMPT: 'low quality, worst quality, bad composition, extra digit, fewer digits, text, inscription, watermark, label, asymmetric, shifted'
+      SD__STEPS: 30
       SD__HF_TOKEN: ''
       SD__H: 512
       SD__W: 512

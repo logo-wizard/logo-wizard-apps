@@ -19,7 +19,7 @@ local-dev:
 	python3 -m virtualenv ../venv
 	source ../venv/bin/activate \
 		&& pip install -e \
-			"./app/logo_worker" \
+			"./app/logo_worker[develop]" \
 			"./app/logo_api[develop]" \
 			"./lib/logo_configs" \
 		&& $(MAKE) sync-reqs \

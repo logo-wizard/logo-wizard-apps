@@ -7,6 +7,8 @@ from logo_api.views.base import LogoApiBaseView
 
 
 class UserInfoView(LogoApiBaseView):
+    """ User info from Keylocak """
+
     async def get(self) -> web.StreamResponse:
         req_data = await self._load_post_request_schema_data(user_schemas.UserInfoRequestSchema)
         user_id: str = req_data['user_id']

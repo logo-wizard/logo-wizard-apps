@@ -8,7 +8,7 @@ from keycloak import KeycloakOpenID
 from logo_api.common import AIOHTTPMiddleware
 from logo_api.enums import HandlerResource
 from logo_api.services.handler_resource_map import HandlerResourceManager
-from logo_api.services.user_id import USER_ID_REQUEST_KEY
+from logo_api.views.base import LogoApiBaseView
 
 
 LOGGER = logging.getLogger(__name__)
@@ -31,6 +31,12 @@ def keycloak_user_id_middleware(
 
     @web.middleware
     async def actual_middleware(request: web.Request, handler: Handler) -> web.StreamResponse:
+        """
+        Injects the user_id into the request if the user is authenticated.
+        If not, checks access with resource manager and either leaves it as None or raises an error
+        """
+
+        USER_ID_REQUEST_KEY = LogoApiBaseView.USER_ID_REQUEST_KEY
         request[USER_ID_REQUEST_KEY] = None
 
         async def _continue_request() -> web.StreamResponse:

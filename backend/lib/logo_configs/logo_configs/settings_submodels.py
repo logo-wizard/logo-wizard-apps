@@ -4,6 +4,8 @@ from pydantic import BaseModel, validator
 
 
 class BaseSubModel(BaseModel):
+    """ Actually a mixin that allows to have comma separated settings """
+
     _comma_separated_fields: ClassVar[tuple[str, ...]] = tuple()
 
     @staticmethod
@@ -66,3 +68,8 @@ class ColorizationSettings(BaseModel):
     MOCK: bool
     MODEL_DIR: str
     MODEL_FILENAME: str
+
+
+class TranslateSettings(BaseModel):
+    MOCK: bool
+    API_KEY: str

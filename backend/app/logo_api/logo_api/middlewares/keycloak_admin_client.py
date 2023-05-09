@@ -15,7 +15,7 @@ LOGGER = logging.getLogger(__name__)
 
 @attr.s
 class KeycloakAdminClient:
-    CTX_KEY: ClassVar[str] = 'KC_ADMIN_CLIENT'
+    CTX_KEY: ClassVar[str] = '__KC_ADMIN_CLIENT__'
 
     host: str = attr.ib()
     realm: str = attr.ib()
@@ -85,6 +85,8 @@ def keycloak_admin_client_middleware(
 ) -> AIOHTTPMiddleware:
     @web.middleware
     async def actual_middleware(request: web.Request, handler: Handler) -> web.StreamResponse:
+        """ Injects a Keycloak admin client into the request by its key """
+
         kc_admin_client = KeycloakAdminClient(
             host=host,
             realm=realm,

@@ -4,11 +4,11 @@ from aiohttp import web
 from aiohttp.typedefs import Handler
 
 from logo_api.common import AIOHTTPMiddleware
-from logo_api.redis_model import RedisModelNotFound
+from logo_api.redis_model import RedisRecordNotFound
 
 
 ERR_TO_HTTP_STATUS_MAP: dict[Type[Exception], int] = {
-    RedisModelNotFound: 404,
+    RedisRecordNotFound: 404,
 }
 
 

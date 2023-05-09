@@ -1,15 +1,14 @@
 import logging
 from http import HTTPStatus
-from typing import AsyncGenerator
 
-from aiohttp import web, BodyPartReader
+from aiohttp import web
 from arq import ArqRedis
 
 import logo_api.schemas.text as text_schemas
 from logo_worker_interface.task_params import DetectTextTaskParams
 from logo_api.enums import LogoProcessingStatus
 from logo_api.models.models import TextDetectionTask
-from logo_api.redis_model import RedisModelManager, RedisModelNotFound
+from logo_api.redis_model import RedisModelManager
 from logo_api.views.base import LogoApiBaseView
 
 
@@ -17,26 +16,14 @@ LOGGER = logging.getLogger(__name__)
 
 
 class DetectTextView(LogoApiBaseView):
+    """ Create a text detection task """
+
     async def post(self) -> web.StreamResponse:
         reader = await self.request.multipart()
+
         file = await reader.next()
-
-        async def _chunk_iter(chunk_size: int = 10 * 1024 * 1024) -> AsyncGenerator[bytes, None]:
-            assert isinstance(file, BodyPartReader)
-            while True:
-                chunk = await file.read_chunk(size=chunk_size)
-                if chunk:
-                    LOGGER.debug(f'Received chunk of {len(chunk)} bytes.')
-                    yield chunk
-                else:
-                    LOGGER.info('Empty chunk received.')
-                    break
-
-        image_bytes = b''
-        async for chunk in _chunk_iter():
-            image_bytes += chunk
+        image_bytes = await self._read_part_bytes(file)
         img_data_url = image_bytes.decode('utf-8')
-        # image_bytes = base64.decodebytes(image_bytes.split(b',')[1])
 
         rmm = RedisModelManager(redis=self.get_redis())
         text_detect_task_obj = TextDetectionTask(
@@ -63,41 +50,29 @@ class DetectTextView(LogoApiBaseView):
 
 
 class TextDetectStatusView(LogoApiBaseView):
+    """ Text detection task status """
+
     async def get(self) -> web.StreamResponse:
         req_data = await self._load_post_request_schema_data(text_schemas.TextStatusRequestSchema)
         rmm = RedisModelManager(redis=self.get_redis())
 
-        try:  # TODO make error handler middleware not to hardcode exception handling
-            logo = await TextDetectionTask.get(rmm, req_data['text_id'])
-        except RedisModelNotFound:
-            return web.json_response(status=404)
-
-        # TODO security
-        # if not logo.is_public and logo.created_by is not None and logo.created_by != self.request[USER_ID_REQUEST_KEY]:
-        #     raise web.HTTPForbidden()
+        text_detection_obj = await TextDetectionTask.get(rmm, req_data['text_id'])
 
         return web.json_response(
             text_schemas.TextStatusResponseSchema().dump(dict(
-                status=logo.status,
+                status=text_detection_obj.status,
             ))
         )
 
 
 class TextDetectionResultView(LogoApiBaseView):
+    """ Text detection task result """
+
     async def get(self) -> web.StreamResponse:
         req_data = await self._load_post_request_schema_data(text_schemas.TextDetectionResultResponseSchema)
         rmm = RedisModelManager(redis=self.get_redis())
 
-        try:  # TODO make error handler middleware not to hardcode exception handling
-            text_detect_obj = await TextDetectionTask.get(rmm, req_data['text_id'])
-        except RedisModelNotFound:
-            return web.json_response(status=404)
-
-        # TODO security
-        # if not text_detect_obj.is_public and text_detect_obj.created_by is not None and text_detect_obj.created_by != self.request[USER_ID_REQUEST_KEY]:
-        #     raise web.HTTPForbidden()
-
-        assert text_detect_obj.mask_data_url is not None
+        text_detect_obj = await TextDetectionTask.get(rmm, req_data['text_id'])
 
         return web.json_response(dict(
             text_id=text_detect_obj.id,

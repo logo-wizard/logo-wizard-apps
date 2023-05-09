@@ -171,3 +171,8 @@ env:
     value: ""
   - name: PG__DB_NAME
     value: ""
+
+  - name: TRANSLATE__MOCK
+    value: 1
+  - name: TRANSLATE__API_KEY
+    value: 'dummy'

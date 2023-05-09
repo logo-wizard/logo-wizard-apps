@@ -18,14 +18,14 @@ class RedisModelException(Exception):
     pass
 
 
-class RedisModelNotFound(RedisModelException):
+class RedisRecordNotFound(RedisModelException):
     pass
 
 
 @attr.s(init=True, kw_only=True)
 class RedisModel(metaclass=abc.ABCMeta):
     KEY_PREFIX: ClassVar[str]
-    DEFAULT_TTL: ClassVar[Optional[int]] = None   # seconds
+    DEFAULT_TTL_SEC: ClassVar[Optional[int]] = None
     _manager: Optional[RedisModelManager] = attr.ib(default=None)
 
     id: str = attr.ib(factory=lambda: str(uuid.uuid4()))
@@ -70,10 +70,10 @@ class RedisModelManager:
         json_data = await self._redis.get(key)
         if json_data is None:
             LOGGER.info(f'RedisModel object not found: {key}')
-            raise RedisModelNotFound()
+            raise RedisRecordNotFound()
 
         obj = self._deserialize_object(json_data, target_cls)
-        obj._manager = self  # type: ignore
+        obj._manager = self
 
         return obj
 
@@ -81,8 +81,8 @@ class RedisModelManager:
         obj_key = obj.generate_key()
         data_json = self._serialize_object(obj)
 
-        if ttl is None and obj.DEFAULT_TTL is not None:
-            ttl = obj.DEFAULT_TTL
+        if ttl is None and obj.DEFAULT_TTL_SEC is not None:
+            ttl = obj.DEFAULT_TTL_SEC
 
         if ttl:
             await self._redis.setex(obj_key, ttl, data_json)
@@ -109,12 +109,12 @@ class BaseModelSchema(BaseSchema):
     id = ma.fields.String()
 
 
-_MODEL_CLASS_TO_STORAGE_SCHEMA_MAP: dict[Type[RedisModel], Type[BaseModelSchema]] = dict()
+_STORAGE_SCHEMA_BY_MODEL_CLASS: dict[Type[RedisModel], Type[BaseModelSchema]] = dict()
 
 
 def _get_model_schema_class(model_cls: Type[RedisModel]) -> Type[BaseModelSchema]:
-    return _MODEL_CLASS_TO_STORAGE_SCHEMA_MAP[model_cls]
+    return _STORAGE_SCHEMA_BY_MODEL_CLASS[model_cls]
 
 
 def register_redis_model_storage_schema(model_cls: Type[RedisModel], schema_cls: Type[BaseModelSchema]) -> None:
-    _MODEL_CLASS_TO_STORAGE_SCHEMA_MAP[model_cls] = schema_cls
+    _STORAGE_SCHEMA_BY_MODEL_CLASS[model_cls] = schema_cls
