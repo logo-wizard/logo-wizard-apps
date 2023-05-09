@@ -1,3 +1,10 @@
+[![Test UI](https://github.com/logo-wizard/logo-wizard-apps/actions/workflows/test-ui.yml/badge.svg?branch=main)](https://github.com/logo-wizard/logo-wizard-apps/actions/workflows/test-ui.yml)
+[![Test Backend Apps](https://github.com/logo-wizard/logo-wizard-apps/actions/workflows/test-backend.yml/badge.svg?branch=main)](https://github.com/logo-wizard/logo-wizard-apps/actions/workflows/test-backend.yml)
+
+[![Build & Publish UI](https://github.com/logo-wizard/logo-wizard-apps/actions/workflows/build-and-publish-ui.yml/badge.svg?branch=main)](https://github.com/logo-wizard/logo-wizard-apps/actions/workflows/build-and-publish-ui.yml)
+[![Build & Publish API](https://github.com/logo-wizard/logo-wizard-apps/actions/workflows/build-and-publish-api.yml/badge.svg?branch=main)](https://github.com/logo-wizard/logo-wizard-apps/actions/workflows/build-and-publish-api.yml)
+[![Build & Publish Worker](https://github.com/logo-wizard/logo-wizard-apps/actions/workflows/build-and-publish-worker.yml/badge.svg)](https://github.com/logo-wizard/logo-wizard-apps/actions/workflows/build-and-publish-worker.yml)
+
 # Logo Wizard Apps
 
 The current repository contains the source code for the Logo Wizard web service.
