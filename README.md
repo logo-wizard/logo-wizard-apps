@@ -15,7 +15,7 @@ The main folders are:
 - `backend` – backend source code, written in python
 - `frontend` – UI created with React
 - `local-dev` – files and guides you will need to set up local development and testing
-- `ops` – Helm charts and encrypted values for the public Logo Wizard installation (which may or may not be available a any given day)
+- `ops` – Helm charts and encrypted values for the public Logo Wizard installation (which may or may not be available on any given day)
 
 # Architecture
 
