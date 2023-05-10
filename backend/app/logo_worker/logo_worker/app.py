@@ -99,7 +99,7 @@ async def main():
 
         pipe = StableDiffusionPipeline.from_pretrained(sd_settings.BASE_MODEL_PATH, use_auth_token=sd_settings.HF_TOKEN)
         pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
-        if sd_settings.REPO is not None:
+        if sd_settings.REPO:
             pipe.unet.load_attn_procs(sd_settings.REPO, use_auth_token=sd_settings.HF_TOKEN)
 
         LOGGER.info('Pipe initialized')
