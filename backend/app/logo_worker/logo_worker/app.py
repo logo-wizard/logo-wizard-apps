@@ -95,12 +95,12 @@ async def main():
 
         diffusers.logging.set_verbosity_info()
 
-        LOGGER.info('Initializing pipe')
+        LOGGER.info(f'Initializing pipe ({sd_settings.BASE_MODEL_PATH} : {sd_settings.REPO})')
 
         pipe = StableDiffusionPipeline.from_pretrained(sd_settings.BASE_MODEL_PATH, use_auth_token=sd_settings.HF_TOKEN)
         pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
-        if sd_settings.REPO:
-            pipe.unet.load_attn_procs(sd_settings.REPO, use_auth_token=sd_settings.HF_TOKEN)
+        # if sd_settings.REPO:  # TODO deprecated, remove from settings
+        #     pipe.unet.load_attn_procs(sd_settings.REPO, use_auth_token=sd_settings.HF_TOKEN)
 
         LOGGER.info('Pipe initialized')
 
