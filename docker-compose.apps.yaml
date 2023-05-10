@@ -74,7 +74,6 @@ services:
       SD__USE_DIFFUSERS: 1
       SD__BASE_MODEL_PATH: ''
       SD__REPO: ''
-      SD__NEG_PROMPT: 'low quality, worst quality, bad composition, extra digit, fewer digits, text, inscription, watermark, label, asymmetric, shifted'
       SD__STEPS: 30
       SD__HF_TOKEN: ''
       SD__H: 512

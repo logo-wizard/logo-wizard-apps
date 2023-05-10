@@ -50,7 +50,6 @@ def sd_settings() -> StableDiffusionSettings:
         SKIP_GRID=True, SKIP_SAVE=False, DDIM_STEPS=10, PLMS=True, LAION400M=False, FIXED_CODE=False, DDIM_ETA=0.0,
         N_ITER=1, H=128, W=128, C=4, F=8, N_SAMPLES=1, N_ROWS=0, SCALE=7.5, FROM_FILE=False,
         CONFIG='/configs/stable-diffusion_v1-inference.yaml', CKPT='/models/model.ckpt', SEED=42, PRECISION='full',
-        NEG_PROMPT='',
     )
 
 

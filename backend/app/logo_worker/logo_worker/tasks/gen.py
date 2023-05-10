@@ -58,7 +58,9 @@ def actual_blocking_generator(prompt: str) -> list[str]:
         height=settings.H,
         num_inference_steps=settings.STEPS,
         guidance_scale=7.5,
-        negative_prompt=settings.NEG_PROMPT,
+        negative_prompt=(
+            'low quality, worst quality, bad composition, extra digit,'
+            ' fewer digits, text, inscription, watermark, label, asymmetric, shifted'),
     ).images[0]
     image = image.resize((FINAL_W, FINAL_H))
 

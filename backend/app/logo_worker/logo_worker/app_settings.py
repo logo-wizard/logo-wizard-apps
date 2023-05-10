@@ -12,7 +12,6 @@ class StableDiffusionSettings(BaseModel):
     BASE_MODEL_PATH: str
     REPO: Optional[str]
     STEPS: int
-    NEG_PROMPT: str
     HF_TOKEN: str
 
     OUTDIR: str
@@ -59,10 +58,6 @@ class WorkerSettings(LogoSettingsCommon):
         BASE_MODEL_PATH='stabilityai/stable-diffusion-2',
         STEPS=30,
         REPO=None,
-        NEG_PROMPT=(
-            'low quality, worst quality, bad composition, extra digit,'
-            ' fewer digits, text, inscription, watermark, label, asymmetric, shifted'
-        ),
         HF_TOKEN='',
         OUTDIR='/outputs',
         SKIP_GRID=True,
