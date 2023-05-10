@@ -36,4 +36,4 @@ jobs:
       - name: Install Dependencies & Run Tests
         run: |
           yarn install --frozen-lockfile
-          yarn test
+          yarn test --watchAll=false

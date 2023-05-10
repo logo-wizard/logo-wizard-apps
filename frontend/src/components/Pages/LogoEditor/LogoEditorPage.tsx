@@ -123,8 +123,6 @@ const LogoEditorPage = () => {
 
     const [TUI_selectedItem, setTUI_selectedItem] = useState<{ id: number }>({id: 3});
     const [TUI_selectedFont, setTUI_selectedFont] = useState<string>(fontArray[0]);
-    const [handler, setHandler] = useState<() => void>();
-    const fontSelector = useRef<HTMLSelectElement>();
 
     // colorization
     const [currentImage, setCurrentImage] = useState<string>();
@@ -293,7 +291,7 @@ const LogoEditorPage = () => {
         const fetch = () => {
             LogoService.getLogoInfo(logo_id!)
                 .then(res => {
-                    if (!UserService.isLoggedIn() || res.data.created_by !== UserService.getUserId()) {
+                    if (res.data.created_by !== null && (!UserService.isLoggedIn() || res.data.created_by !== UserService.getUserId())) {
                         setForbidden(true);
                         return
                     }

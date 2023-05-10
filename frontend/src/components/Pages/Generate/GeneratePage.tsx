@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import Button from "react-bootstrap/Button";
 
 import {Logo, LogoDraft, LogoStatus} from "../../../types/types";
@@ -9,10 +9,16 @@ import Header from "../../Header/Header";
 import LogoCreateModal from "../../LogoCreateModal/LogoCreateModal";
 import {LogoCardsCollection} from "../../LogoCard/LogoCard";
 import UserService from "../../../services/UserService";
+import TriangleLoader from "../../Loader/Loader";
 
 
 const GeneratePage = () => {
-    const [logoList, setLogoList] = useState<Logo[]>(is_dev() ? mockLogoList : []);
+    const LATEST_LOGOS_KEY = '__latest_logos__';
+    const LATEST_LOGOS_N = 5;
+
+    const [logoIdsList, setLogoIdsList] = useState<string[] | null>(null);
+    const [logoList, setLogoList] = useState<Logo[] | undefined>(is_dev() ? mockLogoList : undefined);
+
     const [modal, setModal] = useState<boolean>(false);
     const [activeLogo, setActiveLogo] = useState<LogoDraft>({
         title: "",
@@ -23,6 +29,26 @@ const GeneratePage = () => {
         style: "",
         status: LogoStatus.in_progress
     });
+
+    useEffect(() => {
+        console.log('what');
+        const latestLogoIdsListStr = localStorage.getItem(LATEST_LOGOS_KEY);
+        if (latestLogoIdsListStr === null) {
+            setLogoIdsList([]);
+            setLogoList([]);
+            return;
+        }
+        const latestLogoIdsList: string[] = JSON.parse(latestLogoIdsListStr);
+        setLogoIdsList(latestLogoIdsList);
+
+        LogoService.getBatchLogos({
+            logos: latestLogoIdsList.map(id => {
+                return {logo_id: id}
+            })
+        })
+            .then(res => setLogoList(res.data))
+            .catch(err => console.log(err));
+    }, [])
 
     function toggle() {
         setModal(!modal);
@@ -45,7 +71,16 @@ const GeneratePage = () => {
                         status: LogoStatus.in_progress
                     };
                     newLogo.id = res.data.logo_id;
-                    setLogoList(prevLogoList => [newLogo, ...prevLogoList]);
+                    setLogoList(prevState => {
+                        const newLogoList = [newLogo, ...(prevState || [])];
+                        console.log(newLogoList);
+                        const newLatestLogos = newLogoList
+                            .filter(logo => logo.created_by === null || (UserService.isLoggedIn() && logo.created_by === UserService.getUserId()))
+                            .slice(0, LATEST_LOGOS_N)
+                            .map(logo => logo.id);
+                        localStorage.setItem(LATEST_LOGOS_KEY, JSON.stringify(newLatestLogos));
+                        return newLogoList;
+                    });
                 });
         }
     }
@@ -79,12 +114,32 @@ const GeneratePage = () => {
                         </Button>
                     </div>
 
-                    <LogoCardsCollection
-                        amount={logoList.length}
-                        loaded={logoList.length > 0}
-                        logos={logoList}
-                        withRegen={true}
-                    />
+                    {logoIdsList === null ? (
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            verticalAlign: 'middle',
+                            width: '100%',
+                            height: '100%',
+                            margin: 'auto',
+                        }}>
+                            <TriangleLoader width={100} height={100}/>
+                        </div>
+                    ) : logoIdsList.length === 0 && logoList?.length === 0 ? (
+                        <div className={'no-logos-area-wrapper'}>
+                            <h2 style={{textAlign: 'center'}}>
+                                Похоже, здесь пока нет ни одного логотипа
+                            </h2>
+                        </div>
+                    ) : (
+                        <LogoCardsCollection
+                            amount={logoIdsList.length}
+                            loaded={logoList !== null}
+                            logos={logoList}
+                            withRegen={true}
+                        />
+                    )}
                 </div>
             </div>
             {modal ? (

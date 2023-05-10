@@ -5,6 +5,7 @@ import {Button} from "react-bootstrap";
 import Header from "../../Header/Header";
 import {Logo, MockupsResponse} from "../../../types/types";
 import LogoService from "../../../services/LogoService";
+import UserService from "../../../services/UserService";
 import RenderOnOwner from "../../RenderOnOwner/RenderOnOwner";
 import {NotFound} from "../NotFoundPage/NotFoundPage";
 import TriangleLoader from "../../Loader/Loader";
@@ -91,10 +92,12 @@ const LogoViewerPage = () => {
                                 Скачать изображение
                             </Button>
 
-                            <RenderOnOwner user_id={logo!.created_by}>
+                            {(logo!.created_by === null || logo!.created_by === UserService.getUserId()) && (
                                 <Button variant={'primary'} onClick={() => navigate(`/edit-logo/${logo!.id}`)}>
                                     Продолжить обработку
                                 </Button>
+                            )}
+                            <RenderOnOwner user_id={logo!.created_by}>
                                 <Button variant={'outline-danger'} onClick={handleDelete}>
                                     Удалить
                                 </Button>
