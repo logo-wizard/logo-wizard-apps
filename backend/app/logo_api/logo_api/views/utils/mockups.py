@@ -109,7 +109,7 @@ def make_transform(img: np.ndarray, output_pts: np.ndarray) -> np.ndarray:
     transform = cv2.getPerspectiveTransform(input_pts, output_pts)
 
     # Apply the perspective transformation to the image
-    transformed = cv2.warpPerspective(img, transform, (img.shape[1], img.shape[0]), flags=cv2.INTER_LINEAR)
+    transformed = cv2.warpPerspective(img, transform, (img.shape[1], img.shape[0]), flags=cv2.INTER_CUBIC)
 
     return transformed
 
@@ -119,11 +119,13 @@ def make_mockup(
         image: np.ndarray,
         result_transform: list[np.ndarray],
 ) -> np.ndarray:
-    m_w, m_h = mockup_background.shape[0], mockup_background.shape[1]
-    resized_img = cv2.resize(image, (m_w, m_h), interpolation=cv2.INTER_CUBIC)
+    if mockup_background.shape[0] != mockup_background.shape[1]:
+        raise ValueError('Only square images for mockups are supported')
+    mockup_size = mockup_background.shape[0]
+    resized_img = cv2.resize(image, (mockup_size, mockup_size), interpolation=cv2.INTER_CUBIC)
     masked_img = add_mask(resized_img, MaskType.circle)  # TODO let the user control mask type
 
-    transformed_imgs = [make_transform(masked_img, transform) for transform in result_transform]
+    transformed_imgs = [make_transform(masked_img, transform * mockup_size) for transform in result_transform]
     result = np.copy(mockup_background)
 
     for transformed_img in transformed_imgs:
@@ -141,60 +143,56 @@ def make_mockup(
 @attr.s
 class MockupConfig:
     bg_key: str = attr.ib()
-    width: int = attr.ib()
-    height: int = attr.ib()
-    transforms: list[np.ndarray] = attr.ib()
+    transforms: list[np.ndarray] = attr.ib()  # coordinates in range 0..1
 
 
 _MOCKUP_CONFIGS: list[MockupConfig] = [  # TODO make this configurable from env
     MockupConfig(
-        bg_key='mockup_bg/phone-tablet-mac.png',
-        width=512, height=512,
+        bg_key='mockup_bg/phone-tablet-mac-1024.jpeg',
         transforms=[
-            np.float32([[240., 130.],
-                        [440., 77.],
-                        [413., 316.],
-                        [213., 330.]]),
-            np.float32([[80., 310.],
-                        [150., 310.],
-                        [150., 380.],
-                        [80., 380.]]),
-            np.float32([[23., 405.],
-                        [63., 405.],
-                        [63., 445.],
-                        [23., 445.]]),
+            np.float32([[0.46875, 0.25390625],
+                        [0.859375, 0.15039062],
+                        [0.8066406, 0.6171875],
+                        [0.41601562, 0.64453125]]),
+            np.float32([[0.15625, 0.60546875],
+                        [0.29296875, 0.60546875],
+                        [0.29296875, 0.7421875],
+                        [0.15625, 0.7421875]]),
+            np.float32([[0.04492188, 0.7910156],
+                        [0.12304688, 0.7910156],
+                        [0.12304688, 0.8691406],
+                        [0.04492188, 0.8691406]])
+
         ],
     ),
     MockupConfig(
-        bg_key='mockup_bg/paper-bag-sq.png',
-        width=512, height=512,
-        transforms=[
-            np.float32([[195., 220.],
-                        [355., 185.],
-                        [365., 335.],
-                        [205., 380.]]),
-        ],
-    ),
-    MockupConfig(
-        bg_key='mockup_bg/brick-wall-sign.png',
-        width=512, height=512,
+        bg_key='mockup_bg/paper-bag-sq-1024.jpeg',
         transforms=[
             np.float32([
-                [195., 175.],
-                [319., 191.],
-                [319., 320.],
-                [195., 308.]]),
+                [0.38085938, 0.4296875],
+                [0.6933594, 0.36132812],
+                [0.7128906, 0.6542969],
+                [0.40039062, 0.7421875]]),
         ],
     ),
     MockupConfig(
-        bg_key='mockup_bg/cardboard-box.png',
-        width=512, height=512,
+        bg_key='mockup_bg/brick-wall-sign-1024.jpeg',
         transforms=[
             np.float32([
-                [175., 213.],
-                [259., 222.],
-                [259., 308.],
-                [175., 297.]]),
+                [0.38085938, 0.34179688],
+                [0.6230469, 0.37304688],
+                [0.6230469, 0.625],
+                [0.38085938, 0.6015625]]),
+        ],
+    ),
+    MockupConfig(
+        bg_key='mockup_bg/cardboard-box-1024.jpeg',
+        transforms=[
+            np.float32([
+                [0.30273438, 0.41601562],
+                [0.5058594, 0.43359375],
+                [0.5058594, 0.640625],
+                [0.30273438, 0.6191406]]),
         ],
     ),
 ]
@@ -212,7 +210,6 @@ async def create_mockups_for_image(key: str, image_provider: ImageProvider, tpe:
 
     for mockup_config in _MOCKUP_CONFIGS:
         mockup_bg = await image_provider.get_image(mockup_config.bg_key)
-        mockup_bg = cv2.resize(mockup_bg, (mockup_config.width, mockup_config.height), interpolation=cv2.INTER_CUBIC)
 
         result = await loop.run_in_executor(tpe, make_mockup, mockup_bg, orig_img, mockup_config.transforms)
 
