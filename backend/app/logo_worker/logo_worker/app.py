@@ -11,7 +11,6 @@ from arq import create_pool
 from arq.connections import RedisSettings
 from arq.worker import Worker as ArqWorker
 from diffusers import StableDiffusionPipeline
-from diffusers import DPMSolverMultistepScheduler
 
 from logo_configs.logging_config import configure_logging
 
@@ -98,7 +97,6 @@ async def main():
         LOGGER.info(f'Initializing pipe ({sd_settings.BASE_MODEL_PATH} : {sd_settings.REPO})')
 
         pipe = StableDiffusionPipeline.from_pretrained(sd_settings.BASE_MODEL_PATH, use_auth_token=sd_settings.HF_TOKEN)
-        pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
         # if sd_settings.REPO:  # TODO deprecated, remove from settings
         #     pipe.unet.load_attn_procs(sd_settings.REPO, use_auth_token=sd_settings.HF_TOKEN)
 
