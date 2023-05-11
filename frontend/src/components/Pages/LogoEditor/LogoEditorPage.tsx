@@ -270,6 +270,8 @@ const LogoEditorPage = () => {
         // The main useEffect that is triggered on load
         // Loads the logo, sets up the editor
 
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+
         while (!imageEditor.current) {
             setTimeout(() => {
             }, 100)
