@@ -24,7 +24,9 @@ const SpecializationOption: FC<SpecializationOptionProps> = ({currentSpecializat
     const canBeClicked = () => isChecked() || !limitReached();
 
     return (
-        <label className={`label-as-button ${!canBeClicked() ? ' disabled' : ''}`}>
+        <label
+            className={`label-as-button ${!canBeClicked() ? ' disabled' : ''} ${isChecked() ? ' is-checked' : ''}`}
+        >
             <input
                 className={'hidden'}
                 name={value}

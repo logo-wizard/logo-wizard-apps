@@ -57,7 +57,9 @@
     transition: all 0.3s ease;
 }
 
-.label-as-button:has(input:disabled) {
+.label-as-button:has(input:disabled),
+.label-as-button.disabled
+{
     cursor: not-allowed;
     box-shadow: 0 1px 1px rgb(0 0 0 / 20%),
     inset 8px 8px 16px rgba(0, 0, 0, 0);
@@ -72,7 +74,9 @@
 
 /* pushed */
 .label-as-button:has(input[type=checkbox]:checked),
-.label-as-button:has(input[type=radio]:checked) {
+.label-as-button:has(input[type=radio]:checked),
+.label-as-button.is-checked
+{
     box-shadow: 0 2px 20px rgb(0 0 0 / 0%),
     inset 3px 3px 8px 3px rgb(216, 232, 222),
     inset -3px -3px 6px 1px rgba(255, 255, 255, 0.5);

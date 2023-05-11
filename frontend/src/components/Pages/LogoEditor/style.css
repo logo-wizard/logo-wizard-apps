@@ -62,6 +62,39 @@
     display: none !important;
 }
 
+.pulse-some {
+    box-shadow: 0 0 0 rgba(34, 206, 173, 0.95);
+    animation: pulse-some-animation 1.7s ease;
+    animation-iteration-count: 4;
+}
+
+@-webkit-keyframes pulse-some-animation {
+    0% {
+        -webkit-box-shadow: 0 0 0 0 rgba(34, 206, 173, 0.7);
+    }
+    60% {
+        -webkit-box-shadow: 0 0 0 15px rgba(34, 206, 173, 0);
+    }
+    100% {
+        -webkit-box-shadow: 0 0 0 0 rgba(34, 206, 173, 0);
+    }
+}
+
+@keyframes pulse-some-animation {
+    0% {
+        -moz-box-shadow: 0 0 0 0 rgba(34, 206, 173, 0.7);
+        box-shadow: 0 0 0 0 rgba(34, 206, 173, 0.7);
+    }
+    60% {
+        -moz-box-shadow: 0 0 0 20px rgba(34, 206, 173, 0);
+        box-shadow: 0 0 0 15px rgba(34, 206, 173, 0);
+    }
+    100% {
+        -moz-box-shadow: 0 0 0 0 rgba(34, 206, 173, 0);
+        box-shadow: 0 0 0 0 rgba(34, 206, 173, 0);
+    }
+}
+
 /* help modal */
 
 .help-modal .modal-dialog {
@@ -144,8 +177,11 @@ ul {
     height: 16px;
 }
 
-div:has(>.tui-image-editor-load-btn) {
+/*div:has(>.tui-image-editor-load-btn),*/
+.tui-image-editor-header-buttons
+{
     visibility: hidden !important;
+    display: none !important;
 }
 
 .tui-image-editor-download-btn {

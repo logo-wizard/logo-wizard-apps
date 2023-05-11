@@ -26,7 +26,9 @@ const PaletteOption: FC<PaletteOptionProps> = ({currentPalette, text, value, onC
     }
 
     return (
-        <label className={'label-as-button'}>
+        <label
+            className={`label-as-button ${isChecked() ? ' is-checked' : ''}`}
+        >
             <input
                 className={'hidden'}
                 name={'palette'}

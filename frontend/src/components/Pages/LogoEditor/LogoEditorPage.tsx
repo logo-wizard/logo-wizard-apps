@@ -150,9 +150,30 @@ const LogoEditorPage = () => {
     const [styleImageBackup, setStyleImageBackup] = useState<string | null>(null);
 
     const saveImage = () => {
-        const image = imageEditor.current.imageEditorInst.toDataURL();
+        let imgDataUrl = '';
+        if (activeTab === 'base-editor-tab') {
+            imgDataUrl = imageEditor.current?.imageEditorInst.toDataURL();
+        } else if (activeTab === 'color-tab') {
+            if (imagePoints.length === 0) {
+                imgDataUrl = origImageToColor!;
+            } else {
+                imgDataUrl = currentImage!;
+            }
+        } else if (activeTab === 'text-tab') {
+            if (textMaskBgCanvasRef.current === null) {
+                alert('Что-то пошло не так, попробуйте снова');
+                return;
+            }
+            imgDataUrl = textMaskBgCanvasRef.current.toDataURL();
+        } else if (activeTab === 'style-tab') {
+            if (stylerCanvasRef.current === null) {
+                alert('Что-то пошло не так, попробуйте снова');
+                return;
+            }
+            imgDataUrl = stylerCanvasRef.current.toDataURL();
+        }
         setProcessingRequest(true);
-        LogoService.updateLogoImage(logo_id!, image)
+        LogoService.updateLogoImage(logo_id!, imgDataUrl)
             .then(res => {
                 console.log(res);
                 setProcessingRequest(false);
@@ -326,7 +347,7 @@ const LogoEditorPage = () => {
 
         const image = new Image();
         image.crossOrigin = 'anonymous';
-        image.src = logo.link.replace('host.docker.internal', 'localhost');
+        image.src = logo.link.replace('host.docker.internal', 'localhost') + '?' + performance.now();
         image.onload = () => {
             context.drawImage(image, 0, 0, COLOR_IMG_CANVAS_W, COLOR_IMG_CANVAS_H);
             const imgDataURL = imageCanvas.toDataURL();
@@ -866,9 +887,12 @@ const LogoEditorPage = () => {
                 <TriangleLoader width={200} height={200}/>
             </div>
 
-            <div className={'editor-buttons-wrapper' + (activeTab === 'base-editor-tab' ? '' : ' hidden')}>
-                <Button variant={'outline-primary'} onClick={() => setShowHelpModal(true)}>
-                    Справка
+            <div className={'editor-buttons-wrapper'}>
+                <Button variant={'outline-primary'} className={'pulse-some'} onClick={() => setShowHelpModal(true)}>
+                    Как этим пользоваться?
+                </Button>
+                <Button variant={'primary'} onClick={() => saveImage()}>
+                    Cохранить
                 </Button>
             </div>
 
@@ -1122,9 +1146,6 @@ const LogoEditorPage = () => {
                         </option>
                     ))}
                 </Form.Select>
-                <Button variant={'primary'} onClick={() => saveImage()}>
-                    Cохранить
-                </Button>
             </div>
 
             {/* Help modal */}
@@ -1152,9 +1173,6 @@ const LogoEditorPage = () => {
                     </ul>
                     <p>
                         При работе с редактором важно помнить, что результаты, полученные при работе на одной вкладке, при переходе на другую становятся <b>необратимыми</b>. То есть, если окрасить изображение и перейти на вкладку стилизации, работа продолжится с изображением в новых цветах и вернуть обратно прежние цвета будет нельзя.
-                    </p>
-                    <p>
-                        Сохранение изображения доступно на вкладке основного редактора.
                     </p>
 
                     <p className={'heading'}>

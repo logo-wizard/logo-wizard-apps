@@ -27,7 +27,9 @@ const StyleOption: FC<StyleOptionProps> = ({currentStyle, text, value, onChange,
     }
 
     return (
-        <label className={'label-as-button'}>
+        <label
+            className={`label-as-button ${isChecked() ? ' is-checked' : ''}`}
+        >
             <input
                 className={'hidden'}
                 name={'style'}
