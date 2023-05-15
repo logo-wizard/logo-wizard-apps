@@ -7,6 +7,11 @@
     box-shadow: 0 2px 20px rgb(0 0 0 / 20%);
 }
 
+.link-no-decoration, .link-no-decoration:hover, .link-no-decoration:target, .link-no-decoration:visited {
+    text-decoration: none;
+    color: black;
+}
+
 .nav-title {
     flex: 4 1 60%;
     margin: auto;

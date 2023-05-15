@@ -1,7 +1,10 @@
 import React, {FC, useEffect, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 
-import {Button, Toast} from "react-bootstrap";
+import Button from "react-bootstrap/Button";
+import OverlayTrigger from "react-bootstrap/OverlayTrigger";
+import Tooltip from "react-bootstrap/Tooltip";
+import Toast from "react-bootstrap/Toast";
 import Skeleton from "react-loading-skeleton";
 
 import UserService from "../../../services/UserService";
@@ -118,6 +121,12 @@ const ProfilePage: FC<ProfilePageProps> = ({other = false}) => {
         }
     }, [logoIdsListLoaded, logoListLoaded]);
 
+    const avatarPopover = (
+        <Tooltip>
+            Для аватаров используется <a href={"https://gravatar.com"} target={'_blank'} rel={'noreferrer'}>Gravatar</a>
+        </Tooltip>
+    );
+
     return (
         <div>
             <Header backUrl={'/'}/>
@@ -142,6 +151,13 @@ const ProfilePage: FC<ProfilePageProps> = ({other = false}) => {
                                  setShowCopied(true);
                              }}
                         ></div>
+                    </div>
+                )}
+                {(userInfo || user_id) && !other && (
+                    <div className={'info-icon-wrapper'}>
+                        <OverlayTrigger trigger={['click', 'focus']} placement='bottom' overlay={avatarPopover}>
+                            <div className={'info-icon' + (!userInfoLoaded ? ' not-ready' : '')}></div>
+                        </OverlayTrigger>
                     </div>
                 )}
                 {userInfoLoaded ? (

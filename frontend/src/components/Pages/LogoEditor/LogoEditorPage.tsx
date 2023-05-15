@@ -19,6 +19,8 @@ import {NotFound} from "../NotFoundPage/NotFoundPage";
 import {Forbidden} from "../ForbiddenPage/ForbiddenPage";
 import UserService from "../../../services/UserService";
 import TriangleLoader from "../../Loader/Loader";
+import {Simulate} from "react-dom/test-utils";
+import error = Simulate.error;
 
 const icona = require("tui-image-editor/dist/svg/icon-a.svg");
 const iconb = require("tui-image-editor/dist/svg/icon-b.svg");
@@ -74,6 +76,7 @@ const REMOVE_POINT_EPS = 4;
 const ADD_POINT_EPS = 8;
 const POINT_LINE_W = 1;
 const ACTIVE_POINT_LINE_W = 5;
+const DONT_SHOW_COLOR_STORAGE_KEY = '__dont_show_colorization_help__';
 
 
 const styleOptions: { text: string, value: string }[] = [
@@ -86,7 +89,10 @@ const styleOptions: { text: string, value: string }[] = [
     {text: 'Эмблема', value: 'emblem badge style'},
     {text: 'Винтажный', value: 'vintage old style'},
     {text: 'Аниме', value: 'anime masterpiece by Studio Ghibli, 8k, sharp high quality anime, artstation'},
-    {text: 'Мультфильм', value: 'objects in style of digital art, smooth, sharp focus, gravity falls style, doraemon style, shinchan style, anime style'},
+    {
+        text: 'Мультфильм',
+        value: 'objects in style of digital art, smooth, sharp focus, gravity falls style, doraemon style, shinchan style, anime style'
+    },
     {text: 'Витраж', value: 'stained glass illustration, 4k, hyper detailed, cinematic, vivid colors'},
     {text: 'Случайный', value: 'logo style'},
 ]
@@ -125,6 +131,10 @@ const LogoEditorPage = () => {
     const [TUI_selectedFont, setTUI_selectedFont] = useState<string>(fontArray[0]);
 
     // colorization
+    const [dontShowColorHelpAgain, setDontShowColorHelpAgain] = useState<boolean>(false);
+    const [showConfirmResetColorizationModal, setShowConfirmResetColorizationModal] = useState<boolean>(false);
+    const [seenColorHelp, setSeenColorHelp] = useState<boolean>(false);
+    const [showColorHelpModal, setShowColorHelpModal] = useState<boolean>(false);
     const [currentImage, setCurrentImage] = useState<string>();
     const [origImageToColor, setOrigImageToColor] = useState<string>();
     const imageCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -135,6 +145,7 @@ const LogoEditorPage = () => {
     const [activePoint, setActivePoint] = useState<number | null>(null);
 
     // text detection & removal
+    const [showConfirmUndoTextErasureModal, setShowConfirmUndoTextErasureModal] = useState<boolean>(false);
     const textMaskCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const textMaskBgCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const textMaskToolCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -145,6 +156,7 @@ const LogoEditorPage = () => {
     let textMaskPos: Point = {x: 0, y: 0};
 
     // stylization
+    const [showConfirmResetStyleModal, setShowConfirmResetStyleModal] = useState<boolean>(false);
     const stylerCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const [currentStyle, setCurrentStyle] = useState<string>('');
     const [styleImageBackup, setStyleImageBackup] = useState<string | null>(null);
@@ -176,39 +188,6 @@ const LogoEditorPage = () => {
         LogoService.updateLogoImage(logo_id!, imgDataUrl)
             .then(res => {
                 console.log(res);
-                setProcessingRequest(false);
-            })
-            .catch(err => console.log(err));
-    }
-
-    const _prepareColorizationTab = (image: string) => {
-        // Requests colorization with default params and loads the result into the image canvas
-
-        const fakeImagePoint = {x: 1, y: 1};
-        const fakeGamutPoint = {x: GAMUT_CANVAS_W / 2, y: GAMUT_CANVAS_H / 2};
-
-        let imagePointsToSend: Point[];
-        let gamutPointsToSend: Point[];
-        if (imagePoints.length === 0) {
-            imagePointsToSend = [fakeImagePoint];
-            gamutPointsToSend = [fakeGamutPoint];
-        } else {
-            imagePointsToSend = imagePoints;
-            gamutPointsToSend = gamutPoints;
-        }
-
-        setOrigImageToColor(image);
-
-        setProcessingRequest(true);
-        LogoService.colorize({pointsGamut: gamutPointsToSend, pointsImage: imagePointsToSend}, image)
-            .then(res => {
-                setCurrentGamut(res.data.gamut);
-                setCurrentImage(res.data.result);
-                _rerenderColorImage(res.data.result, imagePoints, activePoint);
-
-                // setImagePoints([]);
-                // setGamutPoints([]);
-                // setActivePoint(null);
                 setProcessingRequest(false);
             })
             .catch(err => console.log(err));
@@ -282,8 +261,29 @@ const LogoEditorPage = () => {
         if (TUI_selectedItem) {
             imageEditor.current.imageEditorInst.changeTextStyle(
                 TUI_selectedItem.id,
-                { fontFamily: fontFamily },
+                {fontFamily: fontFamily},
             )
+        }
+    }
+
+    const loadImageIntoBasicEditor = (link: string) => {
+        const imageCanvas = imageCanvasRef.current as HTMLCanvasElement;  // used as an auxiliary canvas to convert image into Data URL
+        const context = imageCanvas.getContext('2d') as CanvasRenderingContext2D;
+
+        const image = new Image();
+        image.crossOrigin = 'anonymous';
+        image.src = link.replace('host.docker.internal', 'localhost') + '?' + performance.now();
+        image.onload = () => {
+            context.drawImage(image, 0, 0, COLOR_IMG_CANVAS_W, COLOR_IMG_CANVAS_H);
+            const imgDataURL = imageCanvas.toDataURL();
+            setCurrentImage(imgDataURL);
+            setOrigImageToColor(imgDataURL);
+
+            imageEditor.current?.imageEditorInst.loadImageFromURL(imgDataURL, 'logo')
+                .then((sizeValue: loadImageResult) => {
+                    imageEditor.current?.imageEditorInst.ui.activeMenuEvent();
+                    imageEditor.current?.imageEditorInst.ui.resizeEditor({imageSize: sizeValue});
+                });
         }
     }
 
@@ -291,7 +291,11 @@ const LogoEditorPage = () => {
         // The main useEffect that is triggered on load
         // Loads the logo, sets up the editor
 
-        window.scrollTo({ top: 0, behavior: 'smooth' })
+        window.scrollTo({top: 0, behavior: 'smooth'})
+
+        if (localStorage.getItem(DONT_SHOW_COLOR_STORAGE_KEY)) {
+            setSeenColorHelp(true);
+        }
 
         while (!imageEditor.current) {
             setTimeout(() => {
@@ -309,6 +313,14 @@ const LogoEditorPage = () => {
                 setTUI_selectedFont(props.fontFamily)
                 setTUI_selectedItem({id: props.id});
             });
+
+            imageEditor.current?.imageEditorInst.on('undoStackChanged', (length: any) => {
+                if (length === 0) {
+                    setTimeout(() => imageEditor.current?.imageEditorInst.redo(), 50);
+                }
+            });
+
+            loadImageIntoBasicEditor(data.link!);
         }
 
         const fetch = () => {
@@ -336,32 +348,6 @@ const LogoEditorPage = () => {
         }
 
     }, [imageEditor, loaded, logo_id]);
-
-    useEffect(() => {
-        // Another important useEffect that loads the image itself on load
-
-        if (!loaded || !logo || !logo.link || !imageCanvasRef.current) return;
-
-        const imageCanvas = imageCanvasRef.current as HTMLCanvasElement;
-        const context = imageCanvas.getContext('2d') as CanvasRenderingContext2D;
-
-        const image = new Image();
-        image.crossOrigin = 'anonymous';
-        image.src = logo.link.replace('host.docker.internal', 'localhost') + '?' + performance.now();
-        image.onload = () => {
-            context.drawImage(image, 0, 0, COLOR_IMG_CANVAS_W, COLOR_IMG_CANVAS_H);
-            const imgDataURL = imageCanvas.toDataURL();
-            setCurrentImage(imgDataURL);
-            setOrigImageToColor(imgDataURL);
-
-            imageEditor.current?.imageEditorInst.loadImageFromURL(imgDataURL, 'logo')
-                .then((sizeValue: loadImageResult) => {
-                    imageEditor.current?.imageEditorInst.ui.activeMenuEvent();
-                    imageEditor.current?.imageEditorInst.ui.resizeEditor({imageSize: sizeValue});
-                });
-        };
-        console.log('Loaded image from ref');
-    }, [imgplaceholderRef.current, imageEditor.current, logo, loaded]);
 
     useEffect(() => {
         // Fills the mask canvas with black color on load == mask is empty
@@ -394,6 +380,63 @@ const LogoEditorPage = () => {
             }
         };
         gamutImg.src = image;
+    }
+
+    const closeColorHelp = () => {
+        if (dontShowColorHelpAgain) localStorage.setItem(DONT_SHOW_COLOR_STORAGE_KEY, '1');
+        setShowColorHelpModal(false);
+        setSeenColorHelp(true);
+    }
+
+    const _prepareColorizationTab = (
+        image: string,
+        imagePointsOverride: Point[] | undefined = undefined,
+        gamutPointsOverride: Point[] | undefined = undefined,
+    ) => {
+        // Requests colorization with default params and loads the result into the image canvas
+
+        setShowColorHelpModal(true);
+
+        const fakeImagePoint = {x: 1, y: 1};
+        const fakeGamutPoint = {x: GAMUT_CANVAS_W / 2, y: GAMUT_CANVAS_H / 2};
+
+        const currentImagePoints = imagePointsOverride || imagePoints;
+        const currentGamutPoints = gamutPointsOverride || gamutPoints;
+
+        let imagePointsToSend: Point[];
+        let gamutPointsToSend: Point[];
+        let newActivePoint: number | null = null;
+        if (currentImagePoints.length === 0) {
+            imagePointsToSend = [fakeImagePoint];
+            gamutPointsToSend = [fakeGamutPoint];
+            newActivePoint = null;
+        } else {
+            imagePointsToSend = currentImagePoints;
+            gamutPointsToSend = currentGamutPoints;
+            newActivePoint = activePoint;
+        }
+
+        setOrigImageToColor(image);
+
+        setProcessingRequest(true);
+        LogoService.colorize({pointsGamut: gamutPointsToSend, pointsImage: imagePointsToSend}, image)
+            .then(res => {
+                setCurrentGamut(res.data.gamut);
+                setCurrentImage(res.data.result);
+                setActivePoint(newActivePoint);
+                _rerenderColorImage(res.data.result, currentImagePoints, newActivePoint);
+                _rerenderGamut(res.data.gamut, gamutPointsToSend[newActivePoint || 0]);
+
+                setProcessingRequest(false);
+            })
+            .catch(err => console.log(err));
+    }
+
+    const resetColorization = () => {
+        setImagePoints([]);
+        setGamutPoints([]);
+        _prepareColorizationTab(currentImage!, [], []);
+        setShowConfirmResetColorizationModal(false);
     }
 
     const _rerenderColorImage = (image: string, points: Point[], activePointIdx: number | null) => {
@@ -606,7 +649,6 @@ const LogoEditorPage = () => {
         LogoService.eraseText(imageDataURL, maskDataURL)
             .then(res => {
                 const text_id = res.data.text_id;
-                // setProcessingRequest(false);
 
                 const waitForErasure = () => {
                     LogoService.eraseTextStatus(text_id)
@@ -626,7 +668,6 @@ const LogoEditorPage = () => {
                                         img.src = res.data.result;
                                         setNeedConfirmToSwitchTab(true);
                                         setProcessingRequest(false);
-                                        // setCurrentImage(res.data.result);
                                     })
                                     .catch(err => console.log(err))
                             }
@@ -644,7 +685,7 @@ const LogoEditorPage = () => {
     }
 
     const restoreTextFromBackup = () => {
-        // Pops the latest image from text erasure history and renders it, saves the original image into the history
+        // Pops the latest image from text erasure history and renders it
 
         const lastImage = textImageHistory[textImageHistory.length - 1];
 
@@ -659,12 +700,17 @@ const LogoEditorPage = () => {
 
             const newHistory = [...prevHistory];
             newHistory.pop();
+            if (newHistory.length === 0) {
+                setNeedConfirmToSwitchTab(false);
+            }
             return newHistory;
         });
+
+        setShowConfirmUndoTextErasureModal(false);
     }
 
     const restoreStyleFromBackup = () => {
-        // Restores the original image before stylization
+        // Restores the original image that was before stylization
 
         if (styleImageBackup === null) return;
 
@@ -677,6 +723,7 @@ const LogoEditorPage = () => {
         img.src = styleImageBackup;
         setStyleImageBackup(null);
         setNeedConfirmToSwitchTab(false);
+        setShowConfirmResetStyleModal(false);
     }
 
     const stylizeImage = () => {
@@ -978,16 +1025,31 @@ const LogoEditorPage = () => {
                         tryRemoveImagePoint(x, y);
                     }}
                 />
+                <div className={'editor-buttons-wrapper mg-bot-30'}>
+                    <Button
+                        variant={'primary'}
+                        disabled={processingRequest}
+                        onClick={() => setShowConfirmResetColorizationModal(true)}
+                    >
+                        Удалить все точки
+                    </Button>
+                </div>
             </div>
 
             <div className={'editor-container' + (activeTab === 'text-tab' ? '' : ' hidden')}>
                 <div className={'editor-buttons-wrapper mg-top-0'}>
                     <Form>
-                        <Form.Range
-                            value={textToolWidth}
-                            id={'text-tool-width'}
-                            onChange={(e: ChangeEvent<HTMLInputElement>) => setTextToolWidth(parseInt(e.target.value))}
-                        />
+                        <div className={'size-slider-container'}>
+                            <div className={'size-slider-dot'}>•</div>
+                            <div>
+                                <Form.Range
+                                    value={textToolWidth}
+                                    id={'text-tool-width'}
+                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setTextToolWidth(parseInt(e.target.value))}
+                                />
+                            </div>
+                            <div className={'size-slider-dot'}>●</div>
+                        </div>
                         <Form.Check
                             checked={showMask}
                             name={'show-text-mask'}
@@ -1085,7 +1147,7 @@ const LogoEditorPage = () => {
                     <Button
                         variant={'primary'}
                         disabled={processingRequest || textImageHistory.length === 0}
-                        onClick={() => restoreTextFromBackup()}
+                        onClick={() => setShowConfirmUndoTextErasureModal(true)}
                     >
                         Отменить предыдущее удаление
                     </Button>
@@ -1123,7 +1185,7 @@ const LogoEditorPage = () => {
                     <Button
                         variant={'primary'}
                         disabled={processingRequest || styleImageBackup === null}
-                        onClick={() => restoreStyleFromBackup()}
+                        onClick={() => setShowConfirmResetStyleModal(true)}
                     >
                         Сбросить
                     </Button>
@@ -1172,7 +1234,10 @@ const LogoEditorPage = () => {
                         <li>Стилизация</li>
                     </ul>
                     <p>
-                        При работе с редактором важно помнить, что результаты, полученные при работе на одной вкладке, при переходе на другую становятся <b>необратимыми</b>. То есть, если окрасить изображение и перейти на вкладку стилизации, работа продолжится с изображением в новых цветах и вернуть обратно прежние цвета будет нельзя.
+                        При работе с редактором важно помнить, что результаты, полученные при работе на одной вкладке,
+                        при переходе на другую становятся <b>необратимыми</b>. То есть, если окрасить изображение и
+                        перейти на вкладку стилизации, работа продолжится с изображением в новых цветах и вернуть
+                        обратно прежние цвета будет нельзя.
                     </p>
 
                     <p className={'heading'}>
@@ -1185,7 +1250,9 @@ const LogoEditorPage = () => {
                         Нажатием на цветную область цветовой палитры назначайте ей цвет.
                     </p>
                     <p>
-                        <span className={'important'}>Важно!</span> Колоризация производится с учетом яркости изображения, поэтому для любой точки можно выбрать цвет только из ограниченного спектра, например, темные участки изображения не получится покрасить в яркий цвет.
+                        <span className={'important'}>Важно!</span> Колоризация производится с учетом яркости
+                        изображения, поэтому для любой точки можно выбрать цвет только из ограниченного спектра,
+                        например, темные участки изображения не получится покрасить в яркий цвет.
                     </p>
                     <p>
                         Активная точка отображается жирнее остальных.
@@ -1194,7 +1261,8 @@ const LogoEditorPage = () => {
                         Удаляйте точки повторным нажатием.
                     </p>
                     <p>
-                       <span className={'important'}>Важно!</span> Удаление всех точек с изображения возвращает его к состоянию, в котором оно было при переходе на вкладку колоризации.
+                        <span className={'important'}>Важно!</span> Удаление всех точек с изображения возвращает его к
+                        состоянию, в котором оно было при переходе на вкладку колоризации.
                     </p>
 
                     <p className={'heading'}>
@@ -1204,10 +1272,12 @@ const LogoEditorPage = () => {
                         Распознавайте текст нажатием кнопки.
                     </p>
                     <p>
-                        Корректируйте маску вручную – чем меньше пространства останется в пределах маски вокруг текста, тем лучше будет результат.
+                        Корректируйте маску вручную – чем меньше пространства останется в пределах маски вокруг текста,
+                        тем лучше будет результат.
                     </p>
                     <p>
-                        Удаляйте текст по маске нажатием кнопки и отменяйте удаление в случае неудачи. Порой несколько применений одной и той же маски подряд приводят к более хорошему результату.
+                        Удаляйте текст по маске нажатием кнопки и отменяйте удаление в случае неудачи. Порой несколько
+                        применений одной и той же маски подряд приводят к более хорошему результату.
                     </p>
 
                     <p className={'heading'}>
@@ -1217,7 +1287,9 @@ const LogoEditorPage = () => {
                         Выбирайте один из доступных стилей и применяйте его нажатием кнопки.
                     </p>
                     <p>
-                        <span className={'important'}>Важно!</span> Стиль применяется к текущему изображению на экране, то есть несколько стилей подряд будут применяться по цепочке. При необходимости сбрасывайте стиль кнопкой, но помните, что при переходе на другую вкладку прежний вид уже не вернуть.
+                        <span className={'important'}>Важно!</span> Стиль применяется к текущему изображению на экране,
+                        то есть несколько стилей подряд будут применяться по цепочке. При необходимости сбрасывайте
+                        стиль кнопкой, но помните, что при переходе на другую вкладку прежний вид уже не вернуть.
                     </p>
 
                     <p className={'heading'}>
@@ -1228,6 +1300,64 @@ const LogoEditorPage = () => {
                     <Button variant="primary" onClick={() => setShowHelpModal(false)}>
                         Поехали
                     </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Colorization help */}
+            <Modal
+                show={showColorHelpModal && !seenColorHelp}
+                onHide={() => setShowColorHelpModal(false)}
+                className={'help-modal'}
+                backdrop='static'
+                keyboard={false}
+            >
+                <Modal.Header>
+                    <Modal.Title>Колоризация</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className={'help-modal-text'}>
+                    <p className={'heading'}>
+                        Как использовать редактор цветов?
+                    </p>
+                    <p>
+                        На странице отображается изображение после колоризации. Перед окрашиванием яркость цветов
+                        понижается – это особенность работы алгоритма колоризации.
+                    </p>
+                    <p>
+                        Нажатием на изображение добавляйте новые точки для колоризации.
+                    </p>
+                    <p>
+                        Нажатием на цветную область цветовой палитры назначайте ей цвет.
+                    </p>
+                    <p>
+                        <span className={'important'}>Важно!</span> Колоризация производится с учетом яркости цветов,
+                        поэтому для любой точки можно выбрать цвет только из ограниченного спектра, например, темные
+                        участки изображения не получится покрасить в яркий цвет.
+                    </p>
+                    <p>
+                        Активная точка отображается жирнее остальных.
+                    </p>
+                    <p>
+                        Удаляйте точки повторным нажатием.
+                    </p>
+                    <p>
+                        <span className={'important'}>Важно!</span> Удаление всех точек с изображения возвращает его к
+                        состоянию, в котором оно было при переходе на вкладку колоризации.
+                    </p>
+                </Modal.Body>
+                <Modal.Footer>
+                    <div className={'color-modal-footer'}>
+                        <Form.Check
+                            checked={dontShowColorHelpAgain}
+                            label={'Больше не показывать'}
+                            onChange={e => setDontShowColorHelpAgain(e.target.checked)}
+                            id={'dont-show-color-help-again-check'}
+                        />
+                        <div>
+                            <Button variant="primary" onClick={() => closeColorHelp()}>
+                                Поехали
+                            </Button>
+                        </div>
+                    </div>
                 </Modal.Footer>
             </Modal>
 
@@ -1256,6 +1386,85 @@ const LogoEditorPage = () => {
                         _processTabChange(nextTab, false);
                     }}>
                         Переключиться
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Confirm reset colorization modal */}
+            <Modal
+                show={showConfirmResetColorizationModal}
+                backdrop='static'
+                keyboard={true}
+            >
+                <Modal.Header>
+                    <Modal.Title>Вы уверены?</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <p style={{lineHeight: '2em'}}>
+                        Удалить все точки? Это вернет изображение к состоянию, в котором оно было при последнем открытии
+                        редактора цветов.
+                    </p>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowConfirmResetColorizationModal(false)}>
+                        Отмена
+                    </Button>
+                    <Button variant="primary" onClick={() => resetColorization()}>
+                        Удалить
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Confirm undo test erasure modal */}
+            <Modal
+                show={showConfirmUndoTextErasureModal}
+                backdrop='static'
+                keyboard={true}
+            >
+                <Modal.Header>
+                    <Modal.Title>Вы уверены?</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <p style={{lineHeight: '2em'}}>
+                        Действия нельзя будет отменить.
+                    </p>
+                    <p style={{lineHeight: '2em'}}>
+                        Отменить предыдущее удаление?
+                    </p>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowConfirmUndoTextErasureModal(false)}>
+                        Отмена
+                    </Button>
+                    <Button variant="primary" onClick={() => restoreTextFromBackup()}>
+                        Да
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Confirm reset style modal */}
+            <Modal
+                show={showConfirmResetStyleModal}
+                backdrop='static'
+                keyboard={true}
+            >
+                <Modal.Header>
+                    <Modal.Title>Вы уверены?</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <p style={{lineHeight: '2em'}}>
+                        Действия нельзя будет отменить.
+                    </p>
+                    <p style={{lineHeight: '2em'}}>
+                        Сброс стиля вернет изображение к тому виду, в котором оно было при переходе в редактор стиля.
+                    </p>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowConfirmResetStyleModal(false)}>
+                        Отмена
+                    </Button>
+                    <Button variant="primary" onClick={() => restoreStyleFromBackup()}>
+                        Сбросить
                     </Button>
                 </Modal.Footer>
             </Modal>

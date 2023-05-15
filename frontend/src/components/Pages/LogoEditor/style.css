@@ -200,7 +200,8 @@ span.tui-colorpicker-palette-preview {
 .tui-image-editor-button.preset.preset-7-5,
 .tui-image-editor-button.preset.preset-16-9,
 .tie-btn-delete,
-.tie-btn-deleteAll {
+.tie-btn-deleteAll,
+.tie-btn-reset{
     display: none !important;
 }
 
@@ -226,6 +227,13 @@ span.tui-colorpicker-palette-preview {
         width: 100%;
         overflow: scroll;
     }
+}
+
+.color-modal-footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
 }
 
 /* text erasure */
@@ -255,6 +263,22 @@ canvas.text-editor-mask, canvas.text-editor-mask-bg canvas.text-editor-mask-tool
 
 input[type='range']::-webkit-slider-thumb {
     background: var(--bs-primary);
+}
+
+.size-slider-container {
+    display: flex;
+    justify-content: space-evenly;
+    text-align: center;
+    height: 24px;
+    line-height: 24px;
+}
+
+.form-range {
+    height: 24px !important;
+}
+
+.size-slider-dot {
+    width: 10%;
 }
 
 /* styler */

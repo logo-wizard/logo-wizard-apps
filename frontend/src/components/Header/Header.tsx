@@ -19,9 +19,11 @@ const Header: FC<HeaderProps> = ({backUrl}) => {
                 <ArrowBack backUrl={backUrl}/>
             </div>
 
-            <div className={'nav-title'}>
-                Logo Wizard
-            </div>
+            <a href={'/'} className={'link-no-decoration'}>
+                <div className={'nav-title'}>
+                    Logo Wizard
+                </div>
+            </a>
 
             <div className={'profile-corner'}>
                 <a href={'/profile'}>
