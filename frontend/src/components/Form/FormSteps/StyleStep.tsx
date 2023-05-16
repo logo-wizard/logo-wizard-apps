@@ -1,5 +1,7 @@
-import React, {ChangeEvent, FC} from "react";
+import React, {FC} from "react";
 import {FormGroup} from "react-bootstrap";
+
+import RadioPushButton from "../../PushButtons/RadioPushButton";
 
 import '../style.css';
 
@@ -7,42 +9,6 @@ import '../style.css';
 interface StepProps {
     onStyleChanged: (newStyle: string) => void;
     current: string,
-}
-
-
-interface StyleOptionProps {
-    currentStyle: string
-    text: string
-    value: string
-    onChange: (newStyle: string) => void
-    disabled: boolean
-}
-
-
-const StyleOption: FC<StyleOptionProps> = ({currentStyle, text, value, onChange, disabled}) => {
-    const isChecked = () => currentStyle === value;
-
-    const handleChange = (_: React.MouseEvent<HTMLInputElement>) => {
-        onChange(isChecked() ? '' : value);
-    }
-
-    return (
-        <label
-            className={`label-as-button ${isChecked() ? ' is-checked' : ''}`}
-        >
-            <input
-                className={'hidden'}
-                name={'style'}
-                value={value}
-                checked={isChecked()}
-                type={'radio'}
-                onClick={handleChange}
-                onChange={(_: ChangeEvent<HTMLInputElement>) => {}}
-                disabled={disabled}
-            />
-            {text}
-        </label>
-    )
 }
 
 
@@ -65,12 +31,13 @@ const StyleStep: FC<StepProps> = ({onStyleChanged, current}) => {
             <div className={'options-container'}>
                 {styleOptions.map((option, index) => (
                     <React.Fragment key={index}>
-                        <StyleOption
-                            currentStyle={current}
+                        <RadioPushButton
+                            currentValue={current}
                             text={option.text}
                             value={option.value}
                             onChange={onStyleChanged}
                             disabled={false}
+                            name={'style'}
                         />
                     </React.Fragment>
                 ))}
@@ -80,4 +47,3 @@ const StyleStep: FC<StepProps> = ({onStyleChanged, current}) => {
 }
 
 export default StyleStep;
-export {StyleOption};

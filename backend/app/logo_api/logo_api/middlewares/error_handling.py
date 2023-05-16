@@ -19,7 +19,11 @@ def simple_error_handling_middleware() -> AIOHTTPMiddleware:
         try:
             response = await handler(request)
         except Exception as e:
-            status_code = ERR_TO_HTTP_STATUS_MAP.get(type(e))
+            if isinstance(e, web.HTTPClientError):
+                status_code = e.status_code
+            else:
+                status_code = ERR_TO_HTTP_STATUS_MAP.get(type(e))
+
             if status_code is None:
                 raise
             return web.json_response(status=status_code)

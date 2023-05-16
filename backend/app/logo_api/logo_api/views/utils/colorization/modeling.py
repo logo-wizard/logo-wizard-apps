@@ -541,6 +541,7 @@ def icolorit_tiny_4ch_patch32_224(pretrained=False, **kwargs):
 @register_model
 def icolorit_small_4ch_patch16_224(pretrained=False, **kwargs):
     kwargs.pop('pretrained_cfg', None)
+    kwargs.pop('pretrained_cfg_overlay', None)
     model = IColoriT(
         img_size=224,
         patch_size=16,

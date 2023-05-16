@@ -8,6 +8,7 @@ import LogoService from "../../../services/LogoService";
 import UserService from "../../../services/UserService";
 import RenderOnOwner from "../../RenderOnOwner/RenderOnOwner";
 import {NotFound} from "../NotFoundPage/NotFoundPage";
+import {Forbidden} from "../ForbiddenPage/ForbiddenPage";
 import TriangleLoader from "../../Loader/Loader";
 
 import './style.css';
@@ -17,6 +18,7 @@ const LogoViewerPage = () => {
     // Fetches and renders a logo with the id from the url and mockups, as well as some controls
 
     const [notFound, setNotFound] = useState<boolean>(false);
+    const [forbidden, setForbidden] = useState<boolean>(false);
     const {logo_id} = useParams();
     const [logo, setLogo] = useState<Logo>();
     const [loaded, setLoaded] = useState<boolean>(false);
@@ -35,6 +37,8 @@ const LogoViewerPage = () => {
                     console.log(err);
                     if (err.response.status === 404) {
                         setNotFound(true);
+                    } else if (err.response.status === 403) {
+                        setForbidden(true);
                     }
                 })
         }
@@ -76,16 +80,24 @@ const LogoViewerPage = () => {
         return <NotFound/>;
     }
 
+    if (forbidden) {
+        return <Forbidden/>;
+    }
+
     return (
         <div>
             <Header backUrl={'/'}/>
             <div className={'image-container'}>
                 {loaded ? (
                     <>
-                        <img src={`${logo!.link}`} alt={'result'} onError={({currentTarget}) => {
-                            const local_s3_link = currentTarget.src.replace('host.docker.internal', 'localhost');
-                            if (currentTarget.src !== local_s3_link) currentTarget.src = local_s3_link;
-                        }}/>
+                        <img
+                            src={`${logo!.link}?${performance.now()}`}
+                            alt={'result'}
+                            onError={({currentTarget}) => {
+                                const local_s3_link = currentTarget.src.replace('host.docker.internal', 'localhost');
+                                if (currentTarget.src !== local_s3_link) currentTarget.src = local_s3_link;
+                            }}
+                        />
 
                         <div className={'buttons-wrapper'}>
                             <Button variant={'primary'} onClick={downloadImage}>

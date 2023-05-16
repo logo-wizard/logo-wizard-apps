@@ -2,7 +2,7 @@ import os
 from setuptools import setup, find_packages
 
 
-__version__ = "0.27.0"
+__version__ = "0.28.0"
 
 
 PKG_DIR = os.path.dirname(os.path.abspath(__file__))

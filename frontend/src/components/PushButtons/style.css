@@ -1,0 +1,56 @@
+.hidden {
+    display: none !important;
+}
+
+/* idle */
+.check-push-button {
+    width: 15rem;
+    height: 3rem;
+    cursor: pointer;
+    text-align: center;
+    line-height: 1.2em;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    flex-direction: column;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 20%),
+    inset 8px 8px 16px rgba(0, 0, 0, 0);
+
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Old versions of Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+
+    -webkit-transition: all 0.3s ease; /* Safari and Chrome */
+    -moz-transition: all 0.3s ease; /* Firefox */
+    -ms-transition: all 0.3s ease; /* IE 9 */
+    -o-transition: all 0.3s ease; /* Opera */
+    transition: all 0.3s ease;
+}
+
+.check-push-button:has(input:disabled),
+.check-push-button.disabled
+{
+    cursor: not-allowed;
+    box-shadow: 0 1px 1px rgb(0 0 0 / 20%),
+    inset 8px 8px 16px rgba(0, 0, 0, 0);
+}
+
+/* hover */
+.check-push-button:hover {
+    box-shadow: 0 2px 20px rgb(0 0 0 / 20%),
+    inset 8px 8px 16px rgba(0, 0, 0, 0);
+}
+
+
+/* pushed */
+.check-push-button:has(input[type=checkbox]:checked),
+.check-push-button:has(input[type=radio]:checked),
+.check-push-button.is-checked
+{
+    box-shadow: 0 2px 20px rgb(0 0 0 / 0%),
+    inset 3px 3px 8px 3px rgb(216, 232, 222),
+    inset -3px -3px 6px 1px rgba(255, 255, 255, 0.5);
+}

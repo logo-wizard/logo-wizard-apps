@@ -53,6 +53,7 @@ const ObjectsStep: FC<StepProps> = ({onObjectAdded, onObjectRemoved, current}) =
                     placeholder={'...'}
                     onChange={_handleChange}
                     disabled={!canAddObject()}
+                    maxLength={20}
                 />
                 <Button
                     color="success"
@@ -66,12 +67,12 @@ const ObjectsStep: FC<StepProps> = ({onObjectAdded, onObjectRemoved, current}) =
             </div>
 
             <div>
-                <div style={{display: 'flex', flexDirection: 'column', gap: 10, minHeight: 82}}>
+                <div style={{display: 'flex', flexDirection: 'column', gap: 10, minHeight: 82, fontSize: '1.6em'}}>
                     {current.map((obj, index) => (
                         <div key={index}>
                             <span onClick={() => _handleDeleteObject(index)} style={{cursor: 'pointer'}}>
                                 <Badge pill bg="primary">{obj}</Badge>
-                                <Badge pill bg="primary">X</Badge>
+                                <Badge pill bg="primary">❌</Badge>
                             </span>
                         </div>
                     ))}

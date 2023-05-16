@@ -42,3 +42,4 @@ node_modules
 
 .tmp_test_files/
 **/views/**/mockup_bg/
+**/tools/samples/

@@ -1,43 +1,14 @@
 import React, {ChangeEvent, FC} from "react";
 import {FormGroup} from "react-bootstrap";
 
+import CheckPushButton from "../../PushButtons/CheckPushButton";
+
 import '../style.css';
 
 
 interface StepProps {
     onChange: (e: ChangeEvent<HTMLInputElement>) => void;
     current: string[],
-}
-
-
-interface SpecializationOptionProps {
-    currentSpecializations: string[]
-    text: string
-    value: string
-    onChange: (e: ChangeEvent<HTMLInputElement>) => void
-}
-
-
-const SpecializationOption: FC<SpecializationOptionProps> = ({currentSpecializations, text, value, onChange}) => {
-    const limitReached = () => currentSpecializations.length >= 3;
-    const isChecked = () => currentSpecializations.includes(value);
-    const canBeClicked = () => isChecked() || !limitReached();
-
-    return (
-        <label
-            className={`label-as-button ${!canBeClicked() ? ' disabled' : ''} ${isChecked() ? ' is-checked' : ''}`}
-        >
-            <input
-                className={'hidden'}
-                name={value}
-                checked={isChecked()}
-                type={'checkbox'}
-                onChange={onChange}
-                disabled={!canBeClicked()}
-            />
-            {text}
-        </label>
-    )
 }
 
 
@@ -66,12 +37,13 @@ const SpecializationStep: FC<StepProps> = ({onChange, current}) => {
             <h4 style={{textAlign: 'center', color: '#999'}}>Выберите до трех специализаций</h4>
             <div className={'options-container'}>
                 {specializationOptions.map((option, index) => (
-                    <SpecializationOption
+                    <CheckPushButton
                         key={index}
-                        currentSpecializations={current}
+                        currentValues={current}
                         text={option.text}
                         value={option.value}
                         onChange={onChange}
+                        limit={3}
                     />
                 ))}
             </div>

@@ -1,3 +1,13 @@
+.one-line-no-wrap {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
 .logo-card-image, .logo-card {
     -webkit-transition: all 0.8s ease; /* Safari and Chrome */
     -moz-transition: all 0.8s ease; /* Firefox */

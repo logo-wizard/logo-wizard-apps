@@ -14,13 +14,11 @@ import "tui-image-editor/dist/tui-image-editor.css";
 import ImageEditor from "@toast-ui/react-image-editor";
 import {whiteTheme} from "./editor-theme";
 import {FormGroup} from "react-bootstrap";
-import {StyleOption} from "../../Form/FormSteps/StyleStep";
 import {NotFound} from "../NotFoundPage/NotFoundPage";
 import {Forbidden} from "../ForbiddenPage/ForbiddenPage";
 import UserService from "../../../services/UserService";
 import TriangleLoader from "../../Loader/Loader";
-import {Simulate} from "react-dom/test-utils";
-import error = Simulate.error;
+import RadioPushButton from "../../PushButtons/RadioPushButton";
 
 const icona = require("tui-image-editor/dist/svg/icon-a.svg");
 const iconb = require("tui-image-editor/dist/svg/icon-b.svg");
@@ -117,6 +115,7 @@ const LogoEditorPage = () => {
     const imgplaceholderRef = useRef<HTMLImageElement | null>(null);
     const [processingRequest, setProcessingRequest] = useState<boolean>(false);  // if there is a request in progress
     const [showHelpModal, setShowHelpModal] = useState<boolean>(false);
+    const [savedImage, setSavedImage] = useState<string>();
 
     // tabs
     const [showSwitchTabModal, setShowSwitchTabModal] = useState<boolean>(false);
@@ -161,7 +160,118 @@ const LogoEditorPage = () => {
     const [currentStyle, setCurrentStyle] = useState<string>('');
     const [styleImageBackup, setStyleImageBackup] = useState<string | null>(null);
 
-    const saveImage = () => {
+    window.onbeforeunload = function (e) {
+        if (savedImage === getCurrentTabImage()) return;
+
+        e = e || window.event;
+        e.preventDefault();
+        // For IE and Firefox prior to version 4
+        if (e) {
+            e.returnValue = 'Sure?';
+        }
+
+        // For Safari
+        return 'Sure?';
+    };
+
+    useEffect(() => {
+        // The main useEffect that is triggered on load
+        // Loads the logo, sets up the editor
+
+        window.scrollTo({top: 0, behavior: 'smooth'})
+
+        if (localStorage.getItem(DONT_SHOW_COLOR_STORAGE_KEY)) {
+            setSeenColorHelp(true);
+        }
+
+        while (!imageEditor.current) {
+            setTimeout(() => {
+            }, 100)
+        }
+
+        const _processResultData = (data: Logo) => {
+            const loadBtn = document.getElementsByClassName('tui-image-editor-load-btn')[0] as HTMLButtonElement;
+            loadBtn.addEventListener('click', () => console.log('No loading, sorry'));
+            setLogo(data);
+            setLoaded(true);
+
+            imageEditor.current?.imageEditorInst.on('objectActivated', (props: { id: number, fontFamily: string }) => {
+                console.log('TUI_selectedItem', props);
+                setTUI_selectedFont(props.fontFamily)
+                setTUI_selectedItem({id: props.id});
+            });
+
+            imageEditor.current?.imageEditorInst.on('undoStackChanged', (length: any) => {
+                if (length === 0) {
+                    setTimeout(() => imageEditor.current?.imageEditorInst.redo(), 50);
+                }
+            });
+
+            loadImageIntoBasicEditor(data.link!);
+        }
+
+        const fetch = () => {
+            LogoService.getLogoInfo(logo_id!)
+                .then(res => {
+                    if (res.data.created_by !== null && (!UserService.isLoggedIn() || res.data.created_by !== UserService.getUserId())) {
+                        setForbidden(true);
+                        return
+                    }
+                    _processResultData(res.data);
+
+                })
+                .catch(err => {
+                    console.log(err);
+                    if (err.response.status === 404) {
+                        setNotFound(true);
+                    } else if (err.response.status === 403) {
+                        setForbidden(true);
+                    }
+                })
+        }
+
+        if (!loaded) {
+            if (_DEBUG) {
+                _processResultData(mocked_logo);
+            } else fetch();
+        }
+
+    }, [imageEditor, loaded, logo_id]);
+
+    useEffect(() => {
+        // Fills the mask canvas with black color on load == mask is empty
+
+        if (!textMaskCanvasRef.current) return;
+        const ctx = textMaskCanvasRef.current?.getContext('2d') as CanvasRenderingContext2D;
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, COLOR_IMG_CANVAS_W, COLOR_IMG_CANVAS_H);
+    }, [textMaskCanvasRef.current])
+
+    const _rerenderGamut = (image: string, point: Point | null) => {
+        // Re-renders the gamut canvas with the passed image and point
+
+        const gamutContext = gamutCanvasRef.current?.getContext('2d') as CanvasRenderingContext2D;
+
+        if (image === '') {
+            gamutContext.clearRect(0, 0, GAMUT_CANVAS_W, GAMUT_CANVAS_H);
+            return;
+        }
+
+        const gamutImg = new Image();
+
+        gamutImg.onload = () => {
+            gamutContext.clearRect(0, 0, GAMUT_CANVAS_W, GAMUT_CANVAS_H);
+            gamutContext.drawImage(gamutImg, 0, 0, GAMUT_CANVAS_W, GAMUT_CANVAS_H);
+            if (point !== null) {
+                gamutContext.beginPath();
+                gamutContext.roundRect(point.x - POINT_SIZE / 2, point.y - POINT_SIZE / 2, POINT_SIZE, POINT_SIZE, 3);
+                gamutContext.stroke();
+            }
+        };
+        gamutImg.src = image;
+    }
+
+    const getCurrentTabImage = () => {
         let imgDataUrl = '';
         if (activeTab === 'base-editor-tab') {
             imgDataUrl = imageEditor.current?.imageEditorInst.toDataURL();
@@ -184,10 +294,16 @@ const LogoEditorPage = () => {
             }
             imgDataUrl = stylerCanvasRef.current.toDataURL();
         }
+        return imgDataUrl;
+    }
+
+    const saveImage = () => {
+        const imgDataUrl = getCurrentTabImage();
+        if (!imgDataUrl) return;
         setProcessingRequest(true);
         LogoService.updateLogoImage(logo_id!, imgDataUrl)
             .then(res => {
-                console.log(res);
+                setSavedImage(imgDataUrl);
                 setProcessingRequest(false);
             })
             .catch(err => console.log(err));
@@ -256,7 +372,6 @@ const LogoEditorPage = () => {
     }
 
     const changeFont = (fontFamily: string) => {
-        console.log(fontFamily);
         setTUI_selectedFont(fontFamily);
         if (TUI_selectedItem) {
             imageEditor.current.imageEditorInst.changeTextStyle(
@@ -283,103 +398,9 @@ const LogoEditorPage = () => {
                 .then((sizeValue: loadImageResult) => {
                     imageEditor.current?.imageEditorInst.ui.activeMenuEvent();
                     imageEditor.current?.imageEditorInst.ui.resizeEditor({imageSize: sizeValue});
+                    setSavedImage(imgDataURL);
                 });
         }
-    }
-
-    useEffect(() => {
-        // The main useEffect that is triggered on load
-        // Loads the logo, sets up the editor
-
-        window.scrollTo({top: 0, behavior: 'smooth'})
-
-        if (localStorage.getItem(DONT_SHOW_COLOR_STORAGE_KEY)) {
-            setSeenColorHelp(true);
-        }
-
-        while (!imageEditor.current) {
-            setTimeout(() => {
-            }, 100)
-        }
-
-        const _processResultData = (data: Logo) => {
-            const loadBtn = document.getElementsByClassName('tui-image-editor-load-btn')[0] as HTMLButtonElement;
-            loadBtn.addEventListener('click', () => console.log('No loading, sorry'));
-            setLogo(data);
-            setLoaded(true);
-
-            imageEditor.current?.imageEditorInst.on('objectActivated', (props: { id: number, fontFamily: string }) => {
-                console.log('TUI_selectedItem', props);
-                setTUI_selectedFont(props.fontFamily)
-                setTUI_selectedItem({id: props.id});
-            });
-
-            imageEditor.current?.imageEditorInst.on('undoStackChanged', (length: any) => {
-                if (length === 0) {
-                    setTimeout(() => imageEditor.current?.imageEditorInst.redo(), 50);
-                }
-            });
-
-            loadImageIntoBasicEditor(data.link!);
-        }
-
-        const fetch = () => {
-            LogoService.getLogoInfo(logo_id!)
-                .then(res => {
-                    if (res.data.created_by !== null && (!UserService.isLoggedIn() || res.data.created_by !== UserService.getUserId())) {
-                        setForbidden(true);
-                        return
-                    }
-                    _processResultData(res.data);
-
-                })
-                .catch(err => {
-                    console.log(err);
-                    if (err.response.status === 404) {
-                        setNotFound(true);
-                    }
-                })
-        }
-
-        if (!loaded) {
-            if (_DEBUG) {
-                _processResultData(mocked_logo);
-            } else fetch();
-        }
-
-    }, [imageEditor, loaded, logo_id]);
-
-    useEffect(() => {
-        // Fills the mask canvas with black color on load == mask is empty
-
-        if (!textMaskCanvasRef.current) return;
-        const ctx = textMaskCanvasRef.current?.getContext('2d') as CanvasRenderingContext2D;
-        ctx.fillStyle = 'black';
-        ctx.fillRect(0, 0, COLOR_IMG_CANVAS_W, COLOR_IMG_CANVAS_H);
-    }, [textMaskCanvasRef.current])
-
-    const _rerenderGamut = (image: string, point: Point | null) => {
-        // Re-renders the gamut canvas with the passed image and point
-
-        const gamutContext = gamutCanvasRef.current?.getContext('2d') as CanvasRenderingContext2D;
-
-        if (image === '') {
-            gamutContext.clearRect(0, 0, GAMUT_CANVAS_W, GAMUT_CANVAS_H);
-            return;
-        }
-
-        const gamutImg = new Image();
-
-        gamutImg.onload = () => {
-            gamutContext.clearRect(0, 0, GAMUT_CANVAS_W, GAMUT_CANVAS_H);
-            gamutContext.drawImage(gamutImg, 0, 0, GAMUT_CANVAS_W, GAMUT_CANVAS_H);
-            if (point !== null) {
-                gamutContext.beginPath();
-                gamutContext.roundRect(point.x - POINT_SIZE / 2, point.y - POINT_SIZE / 2, POINT_SIZE, POINT_SIZE, 3);
-                gamutContext.stroke();
-            }
-        };
-        gamutImg.src = image;
     }
 
     const closeColorHelp = () => {
@@ -425,7 +446,10 @@ const LogoEditorPage = () => {
                 setCurrentImage(res.data.result);
                 setActivePoint(newActivePoint);
                 _rerenderColorImage(res.data.result, currentImagePoints, newActivePoint);
-                _rerenderGamut(res.data.gamut, gamutPointsToSend[newActivePoint || 0]);
+                _rerenderGamut(
+                    currentImagePoints.length === 0 ? '' : res.data.gamut,
+                    gamutPointsToSend[newActivePoint || 0]
+                );
 
                 setProcessingRequest(false);
             })
@@ -435,7 +459,7 @@ const LogoEditorPage = () => {
     const resetColorization = () => {
         setImagePoints([]);
         setGamutPoints([]);
-        _prepareColorizationTab(currentImage!, [], []);
+        _prepareColorizationTab(origImageToColor!, [], []);
         setShowConfirmResetColorizationModal(false);
     }
 
@@ -1166,13 +1190,14 @@ const LogoEditorPage = () => {
                 <FormGroup className={'form-container styler-options mg-top-10'}>
                     <div className={'editor-styler-options-container'}>
                         {styleOptions.map((option, index) => (
-                            <StyleOption
+                            <RadioPushButton
                                 key={index}
-                                currentStyle={currentStyle}
+                                currentValue={currentStyle}
                                 text={option.text}
                                 value={option.value}
                                 onChange={setCurrentStyle}
                                 disabled={processingRequest}
+                                name={'styler-style'}
                             />
                         ))}
                     </div>

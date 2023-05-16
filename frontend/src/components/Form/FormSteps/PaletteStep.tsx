@@ -1,46 +1,14 @@
 import React, {ChangeEvent, FC} from "react";
 import {FormGroup} from "react-bootstrap";
 
+import RadioPushButton from "../../PushButtons/RadioPushButton";
+
 import '../style.css';
 
 
 interface StepProps {
     onChange: (newPalette: string) => void;
     current: string,
-}
-
-
-interface PaletteOptionProps {
-    currentPalette: string
-    text: string
-    value: string
-    onChange: (newPalette: string) => void
-}
-
-
-const PaletteOption: FC<PaletteOptionProps> = ({currentPalette, text, value, onChange}) => {
-    const isChecked = () => currentPalette === value;
-
-    const handleChange = (e: React.MouseEvent<HTMLInputElement>) => {
-        onChange(isChecked() ? '' : value);
-    }
-
-    return (
-        <label
-            className={`label-as-button ${isChecked() ? ' is-checked' : ''}`}
-        >
-            <input
-                className={'hidden'}
-                name={'palette'}
-                value={value}
-                checked={isChecked()}
-                type={'radio'}
-                onClick={handleChange}
-                onChange={(_: ChangeEvent<HTMLInputElement>) => {}}
-            />
-            {text}
-        </label>
-    )
 }
 
 
@@ -66,11 +34,13 @@ const PaletteStep: FC<StepProps> = ({onChange, current}) => {
             <div className={'options-container'}>
                 {paletteOptions.map((option, index) => (
                     <React.Fragment key={index}>
-                        <PaletteOption
-                            currentPalette={current}
+                        <RadioPushButton
+                            currentValue={current}
                             text={option.text}
                             value={option.value}
                             onChange={onChange}
+                            name={'palette'}
+                            disabled={false}
                         />
                     </React.Fragment>
                 ))}

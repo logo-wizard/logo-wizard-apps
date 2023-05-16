@@ -53,10 +53,13 @@ const LogoCardSkeleton = () => {
 
 
 const LogoCard: FC<LogoCardProps> = ({logo, doPoll, onDelete, withRegen}) => {
-    const openImage = (logo: Logo) => window.open(`/view-logo/${logo.id}`, '_blank');
+    const openImage = (id: string) => window.open(`/view-logo/${id}`, '_blank');
+    const openUser = (id: string) => window.open(`/user/${id}`, '_blank');
 
     const [thisLogo, setThisLogo] = useState<Logo>(logo);
     const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+
+    const isRealUser = (userInfo: UserInfo | null) => userInfo !== null && userInfo?.id !== '';
 
     useEffect(() => {
         if (!doPoll || thisLogo.status !== LogoStatus.in_progress) return;
@@ -187,7 +190,10 @@ const LogoCard: FC<LogoCardProps> = ({logo, doPoll, onDelete, withRegen}) => {
                 >
                     {thisLogo.title}
                 </Card.Title>
-                <Card.Subtitle className="mb-2 text-muted">
+                <Card.Subtitle
+                    className={`mb-2 text-muted one-line-no-wrap ${isRealUser(userInfo) ? 'cursor-pointer' : ''}`}
+                    onClick={(e: React.MouseEvent) => isRealUser(userInfo) ? openUser(userInfo!.id) : null}
+                >
                     Автор: {userInfo === null ? (<Skeleton width={'30%'}/>) : userInfo.username}
                 </Card.Subtitle>
                 <div>
@@ -204,7 +210,7 @@ const LogoCard: FC<LogoCardProps> = ({logo, doPoll, onDelete, withRegen}) => {
                                 <Button
                                     variant="outline-dark"
                                     onClick={() => {
-                                        openImage(thisLogo)
+                                        openImage(thisLogo.id)
                                     }}
                                     disabled={thisLogo.status !== LogoStatus.ready}
                                 >
